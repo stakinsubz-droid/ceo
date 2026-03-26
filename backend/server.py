@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,6 +11,13 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
+# Import AI services
+from ai_services.opportunity_scout import OpportunityScout
+from ai_services.book_writer import BookWriter
+from ai_services.course_creator import CourseCreator
+from ai_services.product_generator import ProductGenerator
+from ai_services.micro_taskforce import MicroTaskforce
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,6 +26,13 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# Initialize AI services
+opportunity_scout = OpportunityScout()
+book_writer = BookWriter()
+course_creator = CourseCreator()
+product_generator = ProductGenerator()
+micro_taskforce = MicroTaskforce(db)
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -386,6 +400,291 @@ async def record_revenue_metric(metric: RevenueMetric):
         
         await db.revenue_metrics.insert_one(doc)
         return {"message": "Revenue metric recorded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============ AI TEAM ENDPOINTS ============
+
+@api_router.post("/ai/scout-opportunities")
+async def scout_opportunities():
+    """Trigger Opportunity Scouting AI to find trending niches"""
+    try:
+        # Create task
+        task = AITask(
+            task_type="scout_opportunities",
+            ai_team=AITeam.OPPORTUNITY_SCOUT,
+            status=AITaskStatus.IN_PROGRESS,
+            input_data={"sources": ["social media", "marketplaces", "trends"]}
+        )
+        task_doc = task.model_dump()
+        task_doc['created_at'] = task_doc['created_at'].isoformat()
+        await db.ai_tasks.insert_one(task_doc)
+        
+        # Run opportunity scout
+        opportunities = await opportunity_scout.scout_opportunities()
+        
+        # Save opportunities to database
+        for opp in opportunities:
+            # Remove _id if present
+            opp_copy = opp.copy()
+            opp_copy.pop('_id', None)
+            await db.opportunities.insert_one(opp_copy)
+        
+        # Update task
+        await db.ai_tasks.update_one(
+            {"id": task.id},
+            {"$set": {
+                "status": "completed",
+                "output_data": {"opportunities_found": len(opportunities)},
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "task_id": task.id,
+            "opportunities_found": len(opportunities),
+            "opportunities": opportunities
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GenerateBookRequest(BaseModel):
+    niche: str
+    keywords: List[str]
+    book_length: str = "medium"
+    target_audience: str = "general"
+
+@api_router.post("/ai/generate-book")
+async def generate_book(request: GenerateBookRequest):
+    """Generate an eBook using Book Writing AI"""
+    try:
+        # Create task
+        task = AITask(
+            task_type="generate_book",
+            ai_team=AITeam.BOOK_WRITER,
+            status=AITaskStatus.IN_PROGRESS,
+            input_data=request.model_dump()
+        )
+        task_doc = task.model_dump()
+        task_doc['created_at'] = task_doc['created_at'].isoformat()
+        await db.ai_tasks.insert_one(task_doc)
+        
+        # Generate book
+        book_data = await book_writer.generate_book(
+            niche=request.niche,
+            keywords=request.keywords,
+            book_length=request.book_length,
+            target_audience=request.target_audience
+        )
+        
+        # Add marketplace links and pricing
+        book_data['marketplace_links'] = [
+            {"platform": "Amazon KDP", "url": f"https://amazon.com/dp/{book_data['id'][:8]}", "status": "ready"},
+            {"platform": "Udemy", "url": f"https://udemy.com/course/{book_data['title'].lower().replace(' ', '-')}", "status": "ready"},
+            {"platform": "Shopify", "url": f"https://mystore.shopify.com/products/{book_data['id'][:8]}", "status": "ready"}
+        ]
+        book_data['price'] = 29.99
+        book_data['revenue'] = 0.0
+        book_data['clicks'] = 0
+        book_data['conversions'] = 0
+        
+        # Save to database
+        book_doc = book_data.copy()
+        book_doc.pop('_id', None)  # Remove _id if present
+        await db.products.insert_one(book_doc)
+        
+        # Return without _id
+        return_data = {k: v for k, v in book_data.items() if k != '_id'}
+        
+        # Update task
+        await db.ai_tasks.update_one(
+            {"id": task.id},
+            {"$set": {
+                "status": "completed",
+                "output_data": {"product_id": return_data['id'], "title": return_data['title']},
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "task_id": task.id,
+            "product": return_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GenerateCourseRequest(BaseModel):
+    topic: str
+    target_audience: str = "beginners"
+    duration_hours: int = 3
+    learning_objectives: Optional[List[str]] = None
+
+@api_router.post("/ai/generate-course")
+async def generate_course(request: GenerateCourseRequest):
+    """Generate a course using Course Creation AI"""
+    try:
+        # Create task
+        task = AITask(
+            task_type="generate_course",
+            ai_team=AITeam.COURSE_CREATOR,
+            status=AITaskStatus.IN_PROGRESS,
+            input_data=request.model_dump()
+        )
+        task_doc = task.model_dump()
+        task_doc['created_at'] = task_doc['created_at'].isoformat()
+        await db.ai_tasks.insert_one(task_doc)
+        
+        # Generate course
+        course_data = await course_creator.generate_course(
+            topic=request.topic,
+            target_audience=request.target_audience,
+            duration_hours=request.duration_hours,
+            learning_objectives=request.learning_objectives
+        )
+        
+        # Add marketplace links and pricing
+        course_data['marketplace_links'] = [
+            {"platform": "Udemy", "url": f"https://udemy.com/course/{course_data['title'].lower().replace(' ', '-')}", "status": "ready"},
+            {"platform": "Shopify", "url": f"https://mystore.shopify.com/products/{course_data['id'][:8]}", "status": "ready"}
+        ]
+        course_data['price'] = 49.99
+        course_data['revenue'] = 0.0
+        course_data['clicks'] = 0
+        course_data['conversions'] = 0
+        course_data['tags'] = [request.topic]
+        
+        # Save to database
+        course_doc = course_data.copy()
+        course_doc.pop('_id', None)
+        await db.products.insert_one(course_doc)
+        
+        return_data = {k: v for k, v in course_data.items() if k != '_id'}
+        
+        # Update task
+        await db.ai_tasks.update_one(
+            {"id": task.id},
+            {"$set": {
+                "status": "completed",
+                "output_data": {"product_id": return_data['id'], "title": return_data['title']},
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "task_id": task.id,
+            "product": return_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GenerateProductRequest(BaseModel):
+    product_type: str  # template/planner/mini_app
+    keywords: List[str]
+    style: str = "professional"
+    target_use_case: Optional[str] = None
+
+@api_router.post("/ai/generate-product")
+async def generate_product(request: GenerateProductRequest):
+    """Generate a digital product using Product AI"""
+    try:
+        # Create task
+        task = AITask(
+            task_type=f"generate_{request.product_type}",
+            ai_team=AITeam.PRODUCT_CREATOR,
+            status=AITaskStatus.IN_PROGRESS,
+            input_data=request.model_dump()
+        )
+        task_doc = task.model_dump()
+        task_doc['created_at'] = task_doc['created_at'].isoformat()
+        await db.ai_tasks.insert_one(task_doc)
+        
+        # Generate product
+        product_data = await product_generator.generate_product(
+            product_type=request.product_type,
+            keywords=request.keywords,
+            style=request.style,
+            target_use_case=request.target_use_case
+        )
+        
+        # Add marketplace links and pricing
+        product_data['marketplace_links'] = [
+            {"platform": "Amazon KDP", "url": f"https://amazon.com/dp/{product_data['id'][:8]}", "status": "ready"},
+            {"platform": "Shopify", "url": f"https://mystore.shopify.com/products/{product_data['id'][:8]}", "status": "ready"}
+        ]
+        product_data['price'] = 19.99
+        product_data['revenue'] = 0.0
+        product_data['clicks'] = 0
+        product_data['conversions'] = 0
+        
+        # Save to database
+        product_doc = product_data.copy()
+        product_doc.pop('_id', None)
+        await db.products.insert_one(product_doc)
+        
+        return_data = {k: v for k, v in product_data.items() if k != '_id'}
+        
+        # Update task
+        await db.ai_tasks.update_one(
+            {"id": task.id},
+            {"$set": {
+                "status": "completed",
+                "output_data": {"product_id": return_data['id'], "title": return_data['title']},
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "task_id": task.id,
+            "product": return_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/ai/run-autonomous-cycle")
+async def run_autonomous_cycle(background_tasks: BackgroundTasks):
+    """
+    Run complete autonomous workflow:
+    Scout opportunities -> Generate products -> Update dashboard
+    """
+    try:
+        # Run in background to avoid timeout
+        results = await micro_taskforce.run_autonomous_cycle()
+        
+        return {
+            "success": results.get("success", False),
+            "message": "Autonomous cycle completed",
+            "results": results
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/ai/tasks/{task_id}")
+async def get_task_status(task_id: str):
+    """Get status of a specific AI task"""
+    try:
+        task = await db.ai_tasks.find_one({"id": task_id}, {"_id": 0})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Convert ISO strings to datetime
+        if isinstance(task['created_at'], str):
+            task['created_at'] = datetime.fromisoformat(task['created_at'])
+        if task.get('completed_at') and isinstance(task['completed_at'], str):
+            task['completed_at'] = datetime.fromisoformat(task['completed_at'])
+        
+        return task
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

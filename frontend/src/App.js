@@ -22,6 +22,8 @@ const Dashboard = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [revenueMetrics, setRevenueMetrics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aiRunning, setAiRunning] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -65,6 +67,74 @@ const Dashboard = () => {
       fetchDashboardData();
     } catch (error) {
       console.error("Error publishing product:", error);
+    }
+  };
+
+  const runAutonomousCycle = async () => {
+    setAiRunning(true);
+    setAiMessage('🤖 Starting autonomous AI cycle...');
+    
+    try {
+      const response = await axios.post(`${API}/ai/run-autonomous-cycle`);
+      const results = response.data.results;
+      
+      setAiMessage(`✅ Cycle complete! Found ${results.opportunities_found} opportunities, created ${results.products_created} products`);
+      
+      setTimeout(() => {
+        fetchDashboardData();
+        setAiRunning(false);
+        setAiMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error("Error running autonomous cycle:", error);
+      setAiMessage('❌ Error running autonomous cycle');
+      setAiRunning(false);
+    }
+  };
+
+  const scoutOpportunities = async () => {
+    setAiRunning(true);
+    setAiMessage('🔍 Scouting new opportunities...');
+    
+    try {
+      const response = await axios.post(`${API}/ai/scout-opportunities`);
+      setAiMessage(`✅ Found ${response.data.opportunities_found} new opportunities!`);
+      
+      setTimeout(() => {
+        fetchDashboardData();
+        setAiRunning(false);
+        setAiMessage('');
+      }, 2000);
+    } catch (error) {
+      console.error("Error scouting opportunities:", error);
+      setAiMessage('❌ Error scouting opportunities');
+      setAiRunning(false);
+    }
+  };
+
+  const generateProduct = async (opportunity) => {
+    setAiRunning(true);
+    setAiMessage(`📚 Generating product for: ${opportunity.niche}...`);
+    
+    try {
+      const response = await axios.post(`${API}/ai/generate-book`, {
+        niche: opportunity.niche,
+        keywords: opportunity.keywords,
+        book_length: "medium",
+        target_audience: "general"
+      });
+      
+      setAiMessage(`✅ Created: ${response.data.product.title}!`);
+      
+      setTimeout(() => {
+        fetchDashboardData();
+        setAiRunning(false);
+        setAiMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error("Error generating product:", error);
+      setAiMessage('❌ Error generating product');
+      setAiRunning(false);
     }
   };
 
@@ -163,6 +233,59 @@ const Dashboard = () => {
               <TrendingUp className="text-blue-400" size={40} />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* AI Control Panel */}
+      {aiMessage && (
+        <div className="mb-6 bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
+          <p className="text-white text-center font-medium">{aiMessage}</p>
+        </div>
+      )}
+
+      <div className="mb-6 bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20" data-testid="ai-control-panel">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Sparkles size={24} className="text-purple-400" />
+          AI Team Controls
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Master Control */}
+          <button
+            onClick={runAutonomousCycle}
+            disabled={aiRunning}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
+            data-testid="run-autonomous-cycle-btn"
+          >
+            <Activity className={aiRunning ? "animate-spin" : ""} size={20} />
+            {aiRunning ? 'AI Teams Running...' : 'Run Autonomous Cycle'}
+          </button>
+
+          {/* Scout Opportunities */}
+          <button
+            onClick={scoutOpportunities}
+            disabled={aiRunning}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
+            data-testid="scout-opportunities-btn"
+          >
+            <TrendingUp size={20} />
+            Scout Opportunities
+          </button>
+
+          {/* Generate Product (Quick) */}
+          <button
+            onClick={() => opportunities.length > 0 && generateProduct(opportunities[0])}
+            disabled={aiRunning || opportunities.length === 0}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
+            data-testid="quick-generate-btn"
+          >
+            <Package size={20} />
+            Generate Product
+          </button>
+        </div>
+
+        <div className="mt-4 text-sm text-gray-400">
+          <p>💡 <strong>Autonomous Cycle:</strong> Scouts opportunities → Generates 2 products → Updates dashboard</p>
         </div>
       </div>
 
@@ -286,7 +409,7 @@ const Dashboard = () => {
                 opportunities.map((opp) => (
                   <div 
                     key={opp.id} 
-                    className="bg-white/5 rounded-lg p-3 border border-white/10"
+                    className="bg-white/5 rounded-lg p-3 border border-white/10 hover:border-purple-400/50 transition-all"
                     data-testid={`opportunity-${opp.id}`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -295,7 +418,7 @@ const Dashboard = () => {
                         {(opp.trend_score * 100).toFixed(0)}%
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 mb-2">
                       {opp.keywords?.slice(0, 3).map((keyword, idx) => (
                         <span 
                           key={idx}
@@ -305,6 +428,14 @@ const Dashboard = () => {
                         </span>
                       ))}
                     </div>
+                    <button
+                      onClick={() => generateProduct(opp)}
+                      disabled={aiRunning}
+                      className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-3 py-1.5 rounded text-xs transition-all mt-2"
+                      data-testid={`generate-from-opp-${opp.id}`}
+                    >
+                      Generate Product
+                    </button>
                   </div>
                 ))
               )}
