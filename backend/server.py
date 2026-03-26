@@ -29,6 +29,11 @@ from ai_services.analytics_engine import AnalyticsEngine
 from ai_services.real_product_generator import RealProductGenerator
 from ai_services.autonomous_engine import AutonomousEngine
 
+# Import core system
+from core.routes import router as core_router
+from core.routes_v2 import router as core_router_v2
+from core.routes_v3 import router as core_router_v3
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1222,13 +1227,41 @@ async def generate_real_product(niche: str, product_type: str = "ebook"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Health check endpoint
+@app.get("/health")
+async def health():
+    """Health check endpoint for deployment monitoring"""
+    try:
+        # Test MongoDB connection
+        await db.admin.command('ping')
+        return {
+            "status": "healthy",
+            "environment": os.environ.get('ENVIRONMENT', 'development'),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }, 503
+
 # Include the router in the main app
 app.include_router(api_router)
+app.include_router(core_router, prefix="/api")
+app.include_router(core_router_v2, prefix="/api/v2")
+app.include_router(core_router_v3, prefix="/api/v3")
+
+# Configure CORS
+allowed_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+if os.environ.get('ENVIRONMENT') != 'production':
+    allowed_origins.append('*')
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

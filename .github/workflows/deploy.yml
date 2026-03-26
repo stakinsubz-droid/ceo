@@ -1,0 +1,42 @@
+name: Deploy to Render and Vercel
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger Render deployment
+        run: |
+          if [ ! -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+            echo "✅ Render deployment triggered"
+          else
+            echo "⚠️  RENDER_DEPLOY_HOOK not configured"
+          fi
+
+      - name: Deploy to Vercel
+        uses: vercel/action@v4
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          production: true
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "🎉 Deployment workflow completed"
+          echo "Backend: Check Render dashboard at https://dashboard.render.com/"
+          echo "Frontend: Check Vercel dashboard at https://vercel.com/dashboard"

@@ -1,0 +1,91 @@
+services:
+  - type: web
+    name: ceo-backend
+    runtime: docker
+    plan: starter
+    branch: main
+    dockerfile: ./Dockerfile
+    region: oregon
+    envVars:
+      # Core
+      - key: MONGO_URL
+        scope: run
+        value: ${MONGO_URL}
+      - key: DB_NAME
+        scope: run
+        value: ${DB_NAME}
+      - key: ENVIRONMENT
+        scope: run
+        value: production
+      
+      # LEVEL 2 - Monetization
+      - key: GUMROAD_TOKEN
+        scope: run
+        value: ${GUMROAD_TOKEN}
+      - key: TIKTOK_ACCESS_TOKEN
+        scope: run
+        value: ${TIKTOK_ACCESS_TOKEN}
+      - key: INSTAGRAM_ACCESS_TOKEN
+        scope: run
+        value: ${INSTAGRAM_ACCESS_TOKEN}
+      - key: TWITTER_BEARER_TOKEN
+        scope: run
+        value: ${TWITTER_BEARER_TOKEN}
+      - key: MAX_CONCURRENT_PROJECTS
+        scope: run
+        value: "5"
+      - key: PROJECTS_PER_DAY
+        scope: run
+        value: "5"
+      
+      # LEVEL 3 - Enterprise
+      - key: YOUTUBE_API_KEY
+        scope: run
+        value: ${YOUTUBE_API_KEY}
+      - key: YOUTUBE_CHANNEL_ID
+        scope: run
+        value: ${YOUTUBE_CHANNEL_ID}
+      - key: MAILCHIMP_API_KEY
+        scope: run
+        value: ${MAILCHIMP_API_KEY}
+      - key: MAILCHIMP_SERVER
+        scope: run
+        value: ${MAILCHIMP_SERVER}
+      - key: SENDGRID_API_KEY
+        scope: run
+        value: ${SENDGRID_API_KEY}
+      - key: OPENAI_API_KEY
+        scope: run
+        value: ${OPENAI_API_KEY}
+      - key: STRIPE_API_KEY
+        scope: run
+        value: ${STRIPE_API_KEY}
+      - key: STRIPE_WEBHOOK_SECRET
+        scope: run
+        value: ${STRIPE_WEBHOOK_SECRET}
+      
+      # CORS & Security
+      - key: CORS_ORIGINS
+        scope: run
+        value: ${REACT_APP_FRONTEND_URL}
+        
+    healthCheckPath: /health
+
+  - type: web
+    name: ceo-frontend
+    runtime: node
+    plan: starter
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    region: oregon
+    envVars:
+      - key: REACT_APP_API_URL
+        scope: run
+        value: ${REACT_APP_API_URL}
+      - key: REACT_APP_ENABLE_LEVEL2
+        scope: run
+        value: "true"
+      - key: REACT_APP_ENABLE_LEVEL3
+        scope: run
+        value: "true"
