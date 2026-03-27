@@ -32,6 +32,12 @@ const Dashboard = () => {
   const [systemHealth, setSystemHealth] = useState(null);
   const [marketplaceStats, setMarketplaceStats] = useState(null);
   const [automationSchedule, setAutomationSchedule] = useState(null);
+  const [launchResult, setLaunchResult] = useState(null);
+  const [gumroadData, setGumroadData] = useState(null);
+  const [realtimeAnalytics, setRealtimeAnalytics] = useState(null);
+  const [showLaunchModal, setShowLaunchModal] = useState(false);
+  const [launchNiche, setLaunchNiche] = useState('');
+  const [launchType, setLaunchType] = useState('ebook');
 
   useEffect(() => {
     fetchDashboardData();
@@ -233,6 +239,147 @@ const Dashboard = () => {
     }
   };
 
+  // 🚀 LAUNCH PRODUCT ONE-CLICK
+  const launchProductOneClick = async () => {
+    setAiRunning(true);
+    setShowLaunchModal(false);
+    setAiMessage('🚀 LAUNCHING PRODUCT... Scout → Generate → Publish → Market');
+    
+    try {
+      const response = await axios.post(`${API}/launch-product`, {
+        niche: launchNiche || null,
+        product_type: launchType,
+        auto_publish: true,
+        generate_social: true
+      });
+      
+      const result = response.data;
+      setLaunchResult(result);
+      
+      if (result.success) {
+        const gumroadUrl = result.gumroad?.url || 'pending';
+        setAiMessage(`🎉 PRODUCT LAUNCHED!\n📚 ${result.product?.title || 'New Product'}\n🛒 Gumroad: ${result.gumroad?.success ? 'LIVE' : 'Pending'}\n📱 ${result.social_posts?.length || 0} social posts ready`);
+        
+        setTimeout(() => {
+          fetchDashboardData();
+          setAiRunning(false);
+          setActiveTab('overview');
+        }, 5000);
+      } else {
+        setAiMessage(`⚠️ Launch incomplete: ${result.error || 'Check stages for details'}`);
+        setAiRunning(false);
+      }
+    } catch (error) {
+      console.error("Error launching product:", error);
+      setAiMessage('❌ Error launching product: ' + (error.response?.data?.detail || error.message));
+      setAiRunning(false);
+    }
+  };
+
+  // 📊 Get Real-time Analytics
+  const getRealtimeAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API}/analytics/realtime`);
+      setRealtimeAnalytics(response.data);
+    } catch (error) {
+      console.error("Error getting realtime analytics:", error);
+    }
+  };
+
+  // 🛒 Get Gumroad Data
+  const fetchGumroadData = async () => {
+    try {
+      const [productsRes, salesRes] = await Promise.all([
+        axios.get(`${API}/gumroad/products`),
+        axios.get(`${API}/gumroad/sales`)
+      ]);
+      setGumroadData({
+        products: productsRes.data,
+        sales: salesRes.data
+      });
+    } catch (error) {
+      console.error("Error fetching Gumroad data:", error);
+    }
+  };
+
+  // 📱 Generate YouTube Shorts
+  const generateYouTubeShorts = async (productId) => {
+    setAiRunning(true);
+    setAiMessage('🎬 Generating YouTube Shorts scripts...');
+    
+    try {
+      const response = await axios.post(`${API}/social/youtube-shorts`, {
+        product_id: productId,
+        num_scripts: 5
+      });
+      
+      setAiMessage(`✅ Generated ${response.data.shorts_generated} YouTube Shorts scripts!`);
+      
+      setTimeout(() => {
+        setAiRunning(false);
+        setAiMessage('');
+        setActiveTab('marketing');
+      }, 2000);
+    } catch (error) {
+      console.error("Error generating YouTube shorts:", error);
+      setAiMessage('❌ Error generating shorts');
+      setAiRunning(false);
+    }
+  };
+
+  // 📱 Create Social Campaign
+  const createSocialCampaign = async (productId) => {
+    setAiRunning(true);
+    setAiMessage('📱 Creating full social media campaign...');
+    
+    try {
+      const response = await axios.post(`${API}/social/campaign`, {
+        product_id: productId,
+        platforms: ["twitter", "instagram", "tiktok", "linkedin"],
+        posts_per_platform: 3
+      });
+      
+      setAiMessage(`✅ Campaign created! ${response.data.campaign.total_posts} posts across ${Object.keys(response.data.campaign.platforms).length} platforms`);
+      
+      setTimeout(() => {
+        fetchDashboardData();
+        setAiRunning(false);
+        setAiMessage('');
+        setActiveTab('marketing');
+      }, 2000);
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      setAiMessage('❌ Error creating campaign');
+      setAiRunning(false);
+    }
+  };
+
+  // Publish to Gumroad
+  const publishToGumroad = async (productId) => {
+    setAiRunning(true);
+    setAiMessage('🛒 Publishing to Gumroad...');
+    
+    try {
+      const response = await axios.post(`${API}/gumroad/publish?product_id=${productId}`);
+      
+      if (response.data.success) {
+        setAiMessage(`✅ Published to Gumroad! URL: ${response.data.url}`);
+      } else {
+        setAiMessage(`⚠️ Gumroad: ${response.data.error || 'Check configuration'}`);
+      }
+      
+      setTimeout(() => {
+        fetchDashboardData();
+        setAiRunning(false);
+        setAiMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error("Error publishing to Gumroad:", error);
+      setAiMessage('❌ Error publishing: ' + (error.response?.data?.detail || error.message));
+      setAiRunning(false);
+    }
+  };
+
   const getSystemHealth = async () => {
     try {
       const response = await axios.get(`${API}/system/health`);
@@ -408,7 +555,53 @@ const Dashboard = () => {
           AI Team Controls
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* 🚀 LAUNCH PRODUCT - THE MONEY MAKER */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/50 rounded-xl">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xl font-bold text-green-400 flex items-center gap-2">
+                🚀 LAUNCH PRODUCT (One-Click)
+              </h3>
+              <p className="text-sm text-gray-300">Scout → Generate → Publish to Gumroad → Create Marketing</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <label className="text-xs text-gray-400 mb-1 block">Niche (optional)</label>
+              <input
+                type="text"
+                placeholder="e.g., productivity, fitness, investing..."
+                value={launchNiche}
+                onChange={(e) => setLaunchNiche(e.target.value)}
+                className="w-full bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-500"
+                data-testid="launch-niche-input"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">Type</label>
+              <select
+                value={launchType}
+                onChange={(e) => setLaunchType(e.target.value)}
+                className="bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white"
+                data-testid="launch-type-select"
+              >
+                <option value="ebook">📚 eBook ($29.99)</option>
+                <option value="course">🎓 Course ($49.99)</option>
+              </select>
+            </div>
+            <button
+              onClick={launchProductOneClick}
+              disabled={aiRunning}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-700 px-8 py-2.5 rounded-lg transition-all flex items-center gap-2 font-bold text-lg shadow-lg shadow-green-500/30"
+              data-testid="launch-product-btn"
+            >
+              {aiRunning ? <Activity className="animate-spin" size={20} /> : '🚀'}
+              {aiRunning ? 'LAUNCHING...' : 'LAUNCH NOW'}
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Master Control */}
           <button
             onClick={runAutonomousCycle}
@@ -417,7 +610,7 @@ const Dashboard = () => {
             data-testid="run-autonomous-cycle-btn"
           >
             <Activity className={aiRunning ? "animate-spin" : ""} size={20} />
-            {aiRunning ? 'AI Teams Running...' : 'Run Autonomous Cycle'}
+            {aiRunning ? 'Running...' : 'Auto Cycle'}
           </button>
 
           {/* Scout Opportunities */}
@@ -428,7 +621,7 @@ const Dashboard = () => {
             data-testid="scout-opportunities-btn"
           >
             <TrendingUp size={20} />
-            Scout Opportunities
+            Scout
           </button>
 
           {/* Generate Product (Quick) */}
@@ -439,7 +632,7 @@ const Dashboard = () => {
             data-testid="quick-generate-btn"
           >
             <Package size={20} />
-            Generate Product
+            Generate
           </button>
 
           {/* Revenue Optimizer */}
@@ -450,7 +643,7 @@ const Dashboard = () => {
             data-testid="optimize-revenue-btn"
           >
             <DollarSign size={20} />
-            Optimize Revenue
+            Optimize
           </button>
 
           {/* Social Media Posts */}
@@ -461,18 +654,29 @@ const Dashboard = () => {
             data-testid="generate-social-btn"
           >
             <Sparkles size={20} />
-            Social Media Posts
+            Social Posts
           </button>
 
-          {/* Affiliate Program */}
+          {/* YouTube Shorts */}
           <button
-            onClick={generateAffiliateProgram}
-            disabled={aiRunning}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
-            data-testid="affiliate-program-btn"
+            onClick={() => products.length > 0 && generateYouTubeShorts(products[0].id)}
+            disabled={aiRunning || products.length === 0}
+            className="bg-red-600 hover:bg-red-700 disabled:bg-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
+            data-testid="youtube-shorts-btn"
           >
-            <CheckCircle size={20} />
-            Affiliate Program
+            🎬
+            YT Shorts
+          </button>
+
+          {/* Full Social Campaign */}
+          <button
+            onClick={() => products.length > 0 && createSocialCampaign(products[0].id)}
+            disabled={aiRunning || products.length === 0}
+            className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:from-gray-600 disabled:to-gray-700 px-6 py-4 rounded-lg transition-all flex items-center gap-3 justify-center font-semibold"
+            data-testid="social-campaign-btn"
+          >
+            📱
+            Campaign
           </button>
 
           {/* Analytics */}
@@ -483,14 +687,54 @@ const Dashboard = () => {
             data-testid="analytics-btn"
           >
             <Activity size={20} />
-            Get Analytics
+            Analytics
           </button>
         </div>
 
         <div className="mt-4 text-sm text-gray-400">
-          <p>💡 <strong>Autonomous Cycle:</strong> Scouts opportunities → Generates 2 products → Updates dashboard</p>
+          <p>💡 <strong>Launch Product:</strong> Full cycle from idea → Gumroad listing → social media posts in ONE click!</p>
         </div>
       </div>
+
+      {/* Launch Result Display */}
+      {launchResult && launchResult.success && (
+        <div className="mb-6 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-xl p-6">
+          <h3 className="text-xl font-bold text-green-400 mb-4">🎉 Product Launched Successfully!</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-black/20 rounded-lg p-4">
+              <p className="text-sm text-gray-400">Product</p>
+              <p className="font-bold">{launchResult.product?.title || 'New Product'}</p>
+              <p className="text-xs text-gray-500">{launchResult.product?.product_type}</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-4">
+              <p className="text-sm text-gray-400">Gumroad Status</p>
+              <p className={`font-bold ${launchResult.gumroad?.success ? 'text-green-400' : 'text-yellow-400'}`}>
+                {launchResult.gumroad?.success ? '✅ LIVE' : '⏳ Pending'}
+              </p>
+              {launchResult.gumroad?.url && (
+                <a href={launchResult.gumroad.url} target="_blank" rel="noopener noreferrer" 
+                   className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                  View on Gumroad <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+            <div className="bg-black/20 rounded-lg p-4">
+              <p className="text-sm text-gray-400">Marketing</p>
+              <p className="font-bold">{launchResult.social_posts?.length || 0} Posts Ready</p>
+              <p className="text-xs text-gray-500">Across all platforms</p>
+            </div>
+          </div>
+          {launchResult.analytics && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-sm text-gray-400 mb-2">📊 Projections</p>
+              <div className="flex gap-4 text-sm">
+                <span>Est. Monthly Revenue: <span className="text-green-400 font-bold">${launchResult.analytics.estimated_monthly_revenue}</span></span>
+                <span>Success Rate: <span className="text-blue-400 font-bold">{launchResult.analytics.success_probability}</span></span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Conditional Tab Content */}
       {activeTab === 'overview' && (
@@ -554,17 +798,39 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      {/* Publish Control */}
-                      {product.status === 'ready' && (
-                        <button
-                          onClick={() => handlePublish(product.id)}
-                          className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
-                          data-testid={`publish-btn-${product.id}`}
-                        >
-                          <CheckCircle size={16} />
-                          Publish
-                        </button>
-                      )}
+                      {/* Publish Controls */}
+                      <div className="flex flex-col gap-2">
+                        {product.status === 'ready' && (
+                          <>
+                            <button
+                              onClick={() => publishToGumroad(product.id)}
+                              disabled={aiRunning}
+                              className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 disabled:bg-gray-600 px-4 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold"
+                              data-testid={`gumroad-btn-${product.id}`}
+                            >
+                              🛒 Gumroad
+                            </button>
+                            <button
+                              onClick={() => handlePublish(product.id)}
+                              className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 transition-all text-sm"
+                              data-testid={`publish-btn-${product.id}`}
+                            >
+                              <CheckCircle size={16} />
+                              Publish
+                            </button>
+                          </>
+                        )}
+                        {product.status === 'published' && !product.gumroad_data && (
+                          <button
+                            onClick={() => publishToGumroad(product.id)}
+                            disabled={aiRunning}
+                            className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 disabled:bg-gray-600 px-4 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold"
+                            data-testid={`gumroad-btn-${product.id}`}
+                          >
+                            🛒 Sell on Gumroad
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))

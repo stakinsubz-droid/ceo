@@ -247,6 +247,174 @@ class CEOSystemTester:
             else:
                 self.log_test("Analytics Insights Response", False, "No insights in response")
 
+    def test_launch_product_one_click(self):
+        """Test the new Launch Product One-Click endpoint"""
+        print("\n🚀 Testing Launch Product One-Click...")
+        
+        launch_request = {
+            "niche": "productivity",
+            "product_type": "ebook",
+            "auto_publish": True,
+            "generate_social": True
+        }
+        
+        success, data = self.test_endpoint('POST', '/launch-product', 200, launch_request,
+                                         "Launch Product One-Click")
+        
+        if success and data:
+            expected_fields = ['success', 'stages', 'product']
+            missing_fields = [field for field in expected_fields if field not in data]
+            
+            if missing_fields:
+                self.log_test("Launch Product Response", False, f"Missing fields: {missing_fields}")
+            else:
+                stages = data.get('stages', {})
+                product = data.get('product', {})
+                self.log_test("Launch Product Response", True, 
+                            f"Success: {data.get('success')}, Product: {product.get('title', 'Unknown')}")
+                
+                # Check individual stages
+                for stage_name in ['scout', 'generate', 'publish']:
+                    if stage_name in stages:
+                        stage_success = stages[stage_name].get('success', False)
+                        self.log_test(f"Launch Stage: {stage_name}", stage_success, 
+                                    f"Stage completed: {stage_success}")
+
+    def test_gumroad_integration(self):
+        """Test Gumroad integration endpoints"""
+        print("\n🛒 Testing Gumroad Integration...")
+        
+        # Test get Gumroad products
+        success, data = self.test_endpoint('GET', '/gumroad/products', 
+                                         test_name="Get Gumroad Products")
+        
+        if success and data:
+            if 'success' in data:
+                self.log_test("Gumroad Products Response", data.get('success'), 
+                            f"Connected: {data.get('success')}")
+            
+        # Test get Gumroad sales
+        success, data = self.test_endpoint('GET', '/gumroad/sales', 
+                                         test_name="Get Gumroad Sales")
+        
+        if success and data:
+            if 'success' in data:
+                self.log_test("Gumroad Sales Response", data.get('success'), 
+                            f"Sales data available: {data.get('success')}")
+
+    def test_youtube_shorts_generation(self):
+        """Test YouTube Shorts script generation"""
+        print("\n🎬 Testing YouTube Shorts Generation...")
+        
+        # First create a test product to use
+        product_data = {
+            "title": "Test Product for Shorts",
+            "description": "A test product for YouTube Shorts generation",
+            "product_type": "ebook",
+            "price": 19.99
+        }
+        
+        success, created_product = self.test_endpoint('POST', '/products', 201, product_data, 
+                                                    "Create Product for Shorts Test")
+        
+        if success and created_product:
+            product_id = created_product.get('id')
+            if product_id:
+                shorts_request = {
+                    "product_id": product_id,
+                    "num_scripts": 3
+                }
+                
+                success, data = self.test_endpoint('POST', '/social/youtube-shorts', 200, 
+                                                 shorts_request, "Generate YouTube Shorts")
+                
+                if success and data:
+                    expected_fields = ['success', 'shorts_generated', 'shorts']
+                    missing_fields = [field for field in expected_fields if field not in data]
+                    
+                    if missing_fields:
+                        self.log_test("YouTube Shorts Response", False, f"Missing fields: {missing_fields}")
+                    else:
+                        shorts_count = data.get('shorts_generated', 0)
+                        self.log_test("YouTube Shorts Response", True, 
+                                    f"Generated {shorts_count} shorts scripts")
+
+    def test_social_campaign_creation(self):
+        """Test Social Media Campaign creation"""
+        print("\n📱 Testing Social Campaign Creation...")
+        
+        # First create a test product to use
+        product_data = {
+            "title": "Test Product for Campaign",
+            "description": "A test product for social campaign",
+            "product_type": "course",
+            "price": 49.99
+        }
+        
+        success, created_product = self.test_endpoint('POST', '/products', 201, product_data, 
+                                                    "Create Product for Campaign Test")
+        
+        if success and created_product:
+            product_id = created_product.get('id')
+            if product_id:
+                campaign_request = {
+                    "product_id": product_id,
+                    "platforms": ["twitter", "instagram", "tiktok"],
+                    "posts_per_platform": 2
+                }
+                
+                success, data = self.test_endpoint('POST', '/social/campaign', 200, 
+                                                 campaign_request, "Create Social Campaign")
+                
+                if success and data:
+                    expected_fields = ['success', 'campaign']
+                    missing_fields = [field for field in expected_fields if field not in data]
+                    
+                    if missing_fields:
+                        self.log_test("Social Campaign Response", False, f"Missing fields: {missing_fields}")
+                    else:
+                        campaign = data.get('campaign', {})
+                        total_posts = campaign.get('total_posts', 0)
+                        self.log_test("Social Campaign Response", True, 
+                                    f"Created campaign with {total_posts} posts")
+
+    def test_realtime_analytics(self):
+        """Test Real-time Analytics endpoint"""
+        print("\n📊 Testing Real-time Analytics...")
+        
+        success, data = self.test_endpoint('GET', '/analytics/realtime', 
+                                         test_name="Real-time Analytics")
+        
+        if success and data:
+            expected_fields = ['timestamp', 'products', 'revenue', 'traffic', 'gumroad']
+            missing_fields = [field for field in expected_fields if field not in data]
+            
+            if missing_fields:
+                self.log_test("Real-time Analytics Response", False, f"Missing fields: {missing_fields}")
+            else:
+                products = data.get('products', {})
+                revenue = data.get('revenue', {})
+                self.log_test("Real-time Analytics Response", True, 
+                            f"Products: {products.get('total', 0)}, Revenue: ${revenue.get('total', 0)}")
+
+    def test_revenue_breakdown(self):
+        """Test Revenue Breakdown endpoint"""
+        print("\n💰 Testing Revenue Breakdown...")
+        
+        success, data = self.test_endpoint('GET', '/analytics/revenue-breakdown', 
+                                         test_name="Revenue Breakdown")
+        
+        if success and data:
+            expected_fields = ['by_product_type', 'by_marketplace', 'projections']
+            missing_fields = [field for field in expected_fields if field not in data]
+            
+            if missing_fields:
+                self.log_test("Revenue Breakdown Response", False, f"Missing fields: {missing_fields}")
+            else:
+                projections = data.get('projections', {})
+                self.log_test("Revenue Breakdown Response", True, 
+                            f"Projections available: {len(projections)} periods")
+
     def test_ai_tasks_endpoints(self):
         """Test AI tasks management"""
         print("\n⚙️ Testing AI Tasks Endpoints...")
