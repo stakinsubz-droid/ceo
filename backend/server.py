@@ -29,6 +29,8 @@ from ai_services.analytics_engine import AnalyticsEngine
 from ai_services.real_product_generator import RealProductGenerator
 from ai_services.autonomous_engine import AutonomousEngine
 from ai_services.gumroad_publisher import GumroadPublisher
+from ai_services.key_vault import SecureKeyVault
+from ai_services.opportunity_hunter import OpportunityHunter, ProductDiscoveryEngine
 
 # Import core system
 from core.routes import router as core_router
@@ -70,6 +72,9 @@ compliance_checker = ComplianceChecker()
 analytics_engine = AnalyticsEngine()
 real_product_generator = RealProductGenerator()
 gumroad_publisher = GumroadPublisher()
+key_vault = SecureKeyVault(db)
+opportunity_hunter = OpportunityHunter(db)
+product_discovery = ProductDiscoveryEngine(db)
 
 # Autonomous engine (initialized after db)
 autonomous_engine = None
@@ -1668,6 +1673,106 @@ async def get_revenue_breakdown():
         }
         
         return breakdown
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============ SECURE KEY VAULT ============
+
+@api_router.get("/vault/credentials")
+async def list_credentials():
+    """List all stored and available credential types"""
+    try:
+        return await key_vault.list_credentials()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/vault/credentials/{credential_type}")
+async def get_credential_schema(credential_type: str):
+    """Get the schema for a credential type"""
+    return key_vault.get_credential_schema(credential_type)
+
+class StoreCredentialsRequest(BaseModel):
+    credential_type: str
+    credentials: Dict[str, str]
+
+@api_router.post("/vault/credentials")
+async def store_credentials(request: StoreCredentialsRequest):
+    """Store encrypted credentials"""
+    try:
+        return await key_vault.store_credentials(request.credential_type, request.credentials)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/vault/credentials/{credential_type}/test")
+async def test_credentials(credential_type: str):
+    """Test if credentials are working"""
+    try:
+        return await key_vault.test_credentials(credential_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/vault/credentials/{credential_type}")
+async def delete_credentials(credential_type: str):
+    """Delete stored credentials"""
+    try:
+        return await key_vault.delete_credentials(credential_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============ OPPORTUNITY HUNTER ============
+
+@api_router.post("/hunter/hunt")
+async def hunt_opportunities():
+    """Hunt for new income-generating opportunities"""
+    try:
+        return await opportunity_hunter.hunt_opportunities()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/hunter/opportunities")
+async def get_opportunities(status: Optional[str] = None, limit: int = 50):
+    """Get all discovered opportunities"""
+    try:
+        opportunities = await opportunity_hunter.get_all_opportunities(status, limit)
+        return {"success": True, "opportunities": opportunities}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/hunter/team")
+async def create_agent_team(opportunity_id: str):
+    """Create a specialized agent team for an opportunity"""
+    try:
+        return await opportunity_hunter.create_agent_team(opportunity_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/hunter/teams")
+async def get_agent_teams(status: Optional[str] = None):
+    """Get all agent teams"""
+    try:
+        teams = await opportunity_hunter.get_agent_teams(status)
+        return {"success": True, "teams": teams}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============ PRODUCT DISCOVERY ============
+
+@api_router.post("/discovery/discover")
+async def discover_products():
+    """Discover all products from all connected platforms"""
+    try:
+        return await product_discovery.discover_products()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/discovery/summary")
+async def get_product_summary():
+    """Get summary of all products across platforms"""
+    try:
+        return await product_discovery.get_product_summary()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

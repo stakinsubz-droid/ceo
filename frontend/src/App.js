@@ -8,8 +8,11 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, DollarSign, Package, AlertCircle, 
-  CheckCircle, Clock, ExternalLink, Sparkles, Activity 
+  CheckCircle, Clock, ExternalLink, Sparkles, Activity,
+  Key, Target, Settings, Search
 } from 'lucide-react';
+import KeyVault from './components/KeyVault';
+import OpportunityHunter from './components/OpportunityHunter';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -38,6 +41,8 @@ const Dashboard = () => {
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [launchNiche, setLaunchNiche] = useState('');
   const [launchType, setLaunchType] = useState('ebook');
+  const [showKeyVault, setShowKeyVault] = useState(false);
+  const [showOpportunityHunter, setShowOpportunityHunter] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -501,7 +506,37 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Quick Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <button
+            onClick={() => setShowKeyVault(true)}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl p-4 flex items-center gap-4 transition-all"
+            data-testid="open-key-vault-btn"
+          >
+            <Key size={32} className="text-white" />
+            <div className="text-left">
+              <p className="font-bold text-lg">🔐 Key Vault</p>
+              <p className="text-white/70 text-sm">Store API keys & social credentials securely</p>
+            </div>
+          </button>
+          <button
+            onClick={() => setShowOpportunityHunter(true)}
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 rounded-xl p-4 flex items-center gap-4 transition-all"
+            data-testid="open-hunter-btn"
+          >
+            <Target size={32} className="text-white" />
+            <div className="text-left">
+              <p className="font-bold text-lg">🎯 Opportunity Hunter</p>
+              <p className="text-white/70 text-sm">AI finds new income streams & creates agent teams</p>
+            </div>
+          </button>
+        </div>
       </div>
+
+      {/* Modals */}
+      {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
+      {showOpportunityHunter && <OpportunityHunter onClose={() => setShowOpportunityHunter(false)} />}
 
       {/* AI Control Panel */}
       {aiMessage && (
