@@ -450,7 +450,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="app-container" data-testid="ceo-dashboard">
+    <div className="app-container" data-testid="fiilthy-dashboard">
       {/* Mobile Menu Button */}
       <button 
         className="mobile-menu-btn"
@@ -465,9 +465,9 @@ const Dashboard = () => {
           <div className="logo-content">
             <h1>
               <Sparkles size={24} />
-              AI EMPIRE
+              FIILTHY.AI
             </h1>
-            <p className="logo-subtitle">Quantum System</p>
+            <p className="logo-subtitle">Entertainment System</p>
           </div>
         </div>
 

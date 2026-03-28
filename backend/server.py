@@ -331,7 +331,7 @@ class DashboardStats(BaseModel):
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "CEO AI Empire - Autonomous Product Generation System"}
+    return {"message": "Fiilthy.AI.Ent - Quantum Entertainment System"}
 
 
 @app.get("/health")
@@ -2210,12 +2210,12 @@ async def get_teams_summary():
 async def get_app_description():
     """Get full description of what this app does"""
     return {
-        "name": "CEO AI Empire",
+        "name": "Fiilthy.AI.Ent",
         "tagline": "Your Autonomous AI Company That Builds, Launches & Sells Products 24/7",
         "version": "3.0",
         
         "what_it_does": {
-            "summary": "CEO AI Empire is an autonomous system that uses AI agents to discover profitable opportunities, create digital products, publish them to marketplaces, and market them - all automatically.",
+            "summary": "Fiilthy.AI.Ent is a quantum entertainment system powered by autonomous AI agents that discover opportunities, create digital products, publish them to marketplaces, and market them automatically.",
             
             "core_functions": [
                 {
