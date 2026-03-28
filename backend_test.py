@@ -468,7 +468,7 @@ class CEOSystemTester:
 def main():
     # Get backend URL from environment
     import os
-    backend_url = "https://maker-platform-10.preview.emergentagent.com"
+    backend_url = "https://leadership-portal-4.preview.emergentagent.com"
     
     print(f"🎯 CEO System Backend Testing")
     print(f"Backend URL: {backend_url}")
