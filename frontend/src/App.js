@@ -46,10 +46,6 @@ const Dashboard = () => {
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [launchNiche, setLaunchNiche] = useState('');
   const [launchType, setLaunchType] = useState('ebook');
-  const [showKeyVault, setShowKeyVault] = useState(false);
-  const [showOpportunityHunter, setShowOpportunityHunter] = useState(false);
-  const [showProjectFiles, setShowProjectFiles] = useState(false);
-  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -452,21 +448,6 @@ const Dashboard = () => {
 
   return (
     <div data-testid="fiilthy-dashboard">
-      {/* Modals */}
-      {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
-      {showOpportunityHunter && <OpportunityHunter onClose={() => setShowOpportunityHunter(false)} />}
-      {showProjectFiles && <ProjectFiles onClose={() => setShowProjectFiles(false)} />}
-      {showAIAssistant && (
-        <AIAssistant 
-          onClose={() => setShowAIAssistant(false)} 
-          onAction={(action) => {
-            if (action === 'open_vault') setShowKeyVault(true);
-            if (action === 'open_hunter') setShowOpportunityHunter(true);
-            if (action === 'view_products') setActiveTab('overview');
-          }}
-        />
-      )}
-
       {/* AI Message */}
       {aiMessage && (
         <div className="glass" style={{
@@ -547,55 +528,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Action Buttons - Premium */}
-        <div className="action-bar">
-          <button
-            onClick={() => setShowAIAssistant(true)}
-            className="btn-primary"
-            data-testid="open-assistant-btn"
-          >
-            <Sparkles size={20} />
-            <span>Atlas AI Assistant</span>
-          </button>
-          <button
-            onClick={() => setShowProjectFiles(true)}
-            className="btn-secondary"
-            data-testid="open-files-btn"
-          >
-            📁 Project Files
-          </button>
-          <button
-            onClick={() => setShowKeyVault(true)}
-            className="btn-secondary"
-            data-testid="open-key-vault-btn"
-          >
-            <Key size={16} />
-            Key Vault (112+)
-          </button>
-          <button
-            onClick={() => setShowOpportunityHunter(true)}
-            className="btn-secondary"
-            data-testid="open-hunter-btn"
-          >
-            <Search size={16} />
-            Opportunity Hunter
-          </button>
-        </div>
-
-      {/* Modals */}
-      {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
-      {showOpportunityHunter && <OpportunityHunter onClose={() => setShowOpportunityHunter(false)} />}
-      {showProjectFiles && <ProjectFiles onClose={() => setShowProjectFiles(false)} />}
-      {showAIAssistant && (
-        <AIAssistant 
-          onClose={() => setShowAIAssistant(false)} 
-          onAction={(action) => {
-            if (action === 'open_vault') setShowKeyVault(true);
-            if (action === 'open_hunter') setShowOpportunityHunter(true);
-            if (action === 'view_products') setActiveTab('overview');
-          }}
-        />
-      )}
 
       {/* AI Message - Premium Alert */}
       {aiMessage && (
