@@ -51,8 +51,6 @@ const Dashboard = () => {
   const [showProjectFiles, setShowProjectFiles] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   useEffect(() => {
     fetchDashboardData();
     // Refresh data every 30 seconds
@@ -453,102 +451,40 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="app-container" data-testid="fiilthy-dashboard">
-      {/* Mobile Menu Button */}
-      <button 
-        className="mobile-menu-btn"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <Settings size={24} />
-      </button>
+    <div data-testid="fiilthy-dashboard">
+      {/* Modals */}
+      {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
+      {showOpportunityHunter && <OpportunityHunter onClose={() => setShowOpportunityHunter(false)} />}
+      {showProjectFiles && <ProjectFiles onClose={() => setShowProjectFiles(false)} />}
+      {showAIAssistant && (
+        <AIAssistant 
+          onClose={() => setShowAIAssistant(false)} 
+          onAction={(action) => {
+            if (action === 'open_vault') setShowKeyVault(true);
+            if (action === 'open_hunter') setShowOpportunityHunter(true);
+            if (action === 'view_products') setActiveTab('overview');
+          }}
+        />
+      )}
 
-      {/* Quantum Sidebar */}
-      <div className={`quantum-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-        <div className="sidebar-logo">
-          <div className="logo-content">
-            <h1>
-              <Sparkles size={24} />
-              FIILTHY.AI
-            </h1>
-            <p className="logo-subtitle">Entertainment System</p>
-          </div>
+      {/* AI Message */}
+      {aiMessage && (
+        <div className="glass" style={{
+          marginBottom: 'var(--spacing-xl)',
+          padding: 'var(--spacing-lg)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-primary)',
+          boxShadow: '0 0 20px var(--color-primary-glow)',
+          animation: 'fadeInUp 300ms ease'
+        }}>
+          <p style={{
+            textAlign: 'center',
+            fontWeight: '600',
+            color: 'var(--color-text-primary)',
+            whiteSpace: 'pre-line'
+          }}>{aiMessage}</p>
         </div>
-
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <div className="nav-section-title">Main</div>
-            <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
-              <Activity size={18} />
-              <span>Dashboard</span>
-            </Link>
-            <Link to="/agent-teams" className={`nav-item ${window.location.pathname === '/agent-teams' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
-              <Users size={18} />
-              <span>Agent Teams</span>
-            </Link>
-            <Link to="/product-studio" className={`nav-item ${window.location.pathname === '/product-studio' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
-              <Palette size={18} />
-              <span>Product Studio</span>
-            </Link>
-            <button
-              onClick={() => { setActiveTab('marketing'); setSidebarOpen(false); }}
-              className={`nav-item ${activeTab === 'marketing' ? 'active' : ''}`}
-            >
-              <TrendingUp size={18} />
-              <span>Marketing</span>
-            </button>
-            <button
-              onClick={() => { setActiveTab('automation'); setSidebarOpen(false); }}
-              className={`nav-item ${activeTab === 'automation' ? 'active' : ''}`}
-            >
-              <Settings size={18} />
-              <span>Automation</span>
-            </button>
-          </div>
-
-          <div className="nav-section">
-            <div className="nav-section-title">Tools</div>
-            <button
-              onClick={() => { setShowAIAssistant(true); setSidebarOpen(false); }}
-              className="nav-item"
-            >
-              <Sparkles size={18} />
-              <span>AI Assistant</span>
-            </button>
-            <button
-              onClick={() => { setShowKeyVault(true); setSidebarOpen(false); }}
-              className="nav-item"
-            >
-              <Key size={18} />
-              <span>Key Vault</span>
-            </button>
-            <button
-              onClick={() => { setShowOpportunityHunter(true); setSidebarOpen(false); }}
-              className="nav-item"
-            >
-              <Search size={18} />
-              <span>Opportunities</span>
-            </button>
-            <button
-              onClick={() => { setShowProjectFiles(true); setSidebarOpen(false); }}
-              className="nav-item"
-            >
-              <Package size={18} />
-              <span>Project Files</span>
-            </button>
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="system-status-sidebar">
-            <div className="status-pulse"></div>
-            <span className="status-text">Online</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="main-content">
-        <div className="content">
+      )}
 
         {/* Stats Overview - Premium Cards */}
         <div className="stats-grid">
@@ -1467,8 +1403,6 @@ const Dashboard = () => {
           )}
         </div>
       )}
-        </div>
-      </div>
     </div>
   );
 };
