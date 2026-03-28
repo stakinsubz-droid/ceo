@@ -1,9 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Request, Depends
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import time
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
@@ -24,6 +27,7 @@ from ai_services.sales_launch_ai import SalesLaunchAI
 from ai_services.affiliate_manager import AffiliateManager
 from ai_services.scheduler import AutomationScheduler
 from ai_services.marketplace_integrations import MarketplaceIntegrations
+from ai_services.publishing_engine import PublishingEngine
 from ai_services.compliance_checker import ComplianceChecker
 from ai_services.analytics_engine import AnalyticsEngine
 from ai_services.real_product_generator import RealProductGenerator
@@ -34,6 +38,7 @@ from ai_services.opportunity_hunter import OpportunityHunter, ProductDiscoveryEn
 from ai_services.project_manager import ProjectFileManager, PublishingGuide
 from ai_services.ai_assistant import AIAssistant
 from ai_services.team_engine import AgentTeamEngine
+from ai_services.ceo_orchestrator import AICeoOrchestrator
 
 # Import core system
 from core.routes import router as core_router
@@ -71,6 +76,7 @@ social_media_ai = SocialMediaAI()
 sales_launch_ai = SalesLaunchAI()
 affiliate_manager = AffiliateManager()
 marketplace_integrations = MarketplaceIntegrations()
+publishing_engine = PublishingEngine(db)
 compliance_checker = ComplianceChecker()
 analytics_engine = AnalyticsEngine()
 real_product_generator = RealProductGenerator()
@@ -82,6 +88,7 @@ project_manager = ProjectFileManager(db)
 publishing_guide = PublishingGuide()
 ai_assistant = AIAssistant(db)
 team_engine = AgentTeamEngine(db)
+ceo_orchestrator = AICeoOrchestrator(db)
 
 # Autonomous engine (initialized after db)
 autonomous_engine = None
@@ -92,8 +99,99 @@ automation_scheduler = None
 # Create the main app without a prefix
 app = FastAPI()
 
+# Middleware settings
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY") or os.environ.get("API_KEY")
+if not ADMIN_API_KEY:
+    print("⚠️  WARNING: ADMIN_API_KEY not set. Protected endpoints will be disabled.")
+
+# In-memory rate limiter: {ip -> {'count': n, 'reset_at': timestamp}}
+rate_limiter = {}
+RATE_LIMIT = int(os.environ.get("RATE_LIMIT_PER_MINUTE", 60))
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+
+@app.on_event("startup")
+async def startup_event():
+    required_env = ["OPENAI_API_KEY", "MONGO_URL", "DB_NAME", "ADMIN_API_KEY"]
+    missing = [var for var in required_env if not os.environ.get(var)]
+    if missing:
+        raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+
+    # Start publishing queue worker
+    if db is not None:
+        async def publishing_queue_worker():
+            while True:
+                try:
+                    await publishing_engine.process_queue()
+                except Exception as e:
+                    await db.error_logs.insert_one({
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "endpoint": "publishing_queue_worker",
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    })
+                await asyncio.sleep(300)  # every 5 minutes
+
+        asyncio.create_task(publishing_queue_worker())
+
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    # Basic rate limiting
+    ip = get_client_ip(request)
+    now = time.time()
+    entry = rate_limiter.get(ip, {"count": 0, "reset_at": now + 60})
+
+    if now > entry["reset_at"]:
+        entry = {"count": 0, "reset_at": now + 60}
+
+    entry["count"] += 1
+    rate_limiter[ip] = entry
+
+    if entry["count"] > RATE_LIMIT:
+        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+
+    # Request logging (and IP tracking)
+    log_doc = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "path": request.url.path,
+        "method": request.method,
+        "ip": ip,
+        "params": dict(request.query_params),
+    }
+    try:
+        if db is not None:
+            await db.request_logs.insert_one(log_doc)
+    except Exception:
+        pass
+
+    response = await call_next(request)
+    return response
+
+
+async def require_api_key(request: Request):
+    if not ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="API key not configured")
+
+    auth = request.headers.get("Authorization") or request.headers.get("X-API-Key")
+    if not auth:
+        raise HTTPException(status_code=401, detail="Missing API key")
+
+    token = auth.replace("Bearer ", "").strip()
+    if token != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    return True
+
 
 
 # Define Enums
@@ -230,6 +328,25 @@ class DashboardStats(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "CEO AI Empire - Autonomous Product Generation System"}
+
+
+@app.get("/health")
+async def health_check():
+    inf = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "environment": os.environ.get("APP_ENVIRONMENT", "demo"),
+        "mongo_connected": False,
+        "api_key_configured": bool(ADMIN_API_KEY)
+    }
+    if db is not None:
+        try:
+            await db.command({"ping": 1})
+            inf["mongo_connected"] = True
+        except Exception as exc:
+            inf["mongo_connected"] = False
+            inf["mongo_error"] = str(exc)
+    return inf
 
 
 # Dashboard Stats
@@ -459,10 +576,38 @@ async def record_revenue_metric(metric: RevenueMetric):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/api/revenue/summary")
+async def get_revenue_summary(_: bool = Depends(require_api_key)):
+    """Summary of revenue by day and product type"""
+    try:
+        pipeline = [
+            {"$group": {"_id": "$product_type", "revenue": {"$sum": "$revenue"}, "sales": {"$sum": "$sales"}}},
+            {"$sort": {"revenue": -1}}
+        ]
+        summary = await db.revenue_logs.aggregate(pipeline).to_list(100)
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/api/revenue/by-product")
+async def get_revenue_by_product(_: bool = Depends(require_api_key)):
+    """Revenue details by product"""
+    try:
+        pipeline = [
+            {"$group": {"_id": "$product_id", "revenue": {"$sum": "$revenue"}, "count": {"$sum": 1}}},
+            {"$sort": {"revenue": -1}}
+        ]
+        by_product = await db.revenue_logs.aggregate(pipeline).to_list(100)
+        return {"by_product": by_product}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============ AI TEAM ENDPOINTS ============
 
 @api_router.post("/ai/scout-opportunities")
-async def scout_opportunities():
+async def scout_opportunities(_: bool = Depends(require_api_key)):
     """Trigger Opportunity Scouting AI to find trending niches"""
     try:
         # Create task
@@ -513,7 +658,7 @@ class GenerateBookRequest(BaseModel):
     target_audience: str = "general"
 
 @api_router.post("/ai/generate-book")
-async def generate_book(request: GenerateBookRequest):
+async def generate_book(request: GenerateBookRequest, _: bool = Depends(require_api_key)):
     """Generate an eBook using Book Writing AI"""
     try:
         # Create task
@@ -580,7 +725,7 @@ class GenerateCourseRequest(BaseModel):
     learning_objectives: Optional[List[str]] = None
 
 @api_router.post("/ai/generate-course")
-async def generate_course(request: GenerateCourseRequest):
+async def generate_course(request: GenerateCourseRequest, _: bool = Depends(require_api_key)):
     """Generate a course using Course Creation AI"""
     try:
         # Create task
@@ -646,7 +791,7 @@ class GenerateProductRequest(BaseModel):
     target_use_case: Optional[str] = None
 
 @api_router.post("/ai/generate-product")
-async def generate_product(request: GenerateProductRequest):
+async def generate_product(request: GenerateProductRequest, _: bool = Depends(require_api_key)):
     """Generate a digital product using Product AI"""
     try:
         # Create task
@@ -705,7 +850,7 @@ async def generate_product(request: GenerateProductRequest):
 
 
 @api_router.post("/ai/run-autonomous-cycle")
-async def run_autonomous_cycle(background_tasks: BackgroundTasks):
+async def run_autonomous_cycle(background_tasks: BackgroundTasks, _: bool = Depends(require_api_key)):
     """
     Run complete autonomous workflow:
     Scout opportunities -> Generate products -> Update dashboard
@@ -723,11 +868,115 @@ async def run_autonomous_cycle(background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_router.get("/ai/tasks/{task_id}")
-async def get_task_status(task_id: str):
-    """Get status of a specific AI task"""
+async def _record_task(task_type: str, input_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    task_id = f"task-{uuid.uuid4()}"
+    doc = {
+        "id": task_id,
+        "task_type": task_type,
+        "status": "queued",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "input_data": input_data or {},
+        "output_data": None,
+        "error": None
+    }
+    if db is not None:
+        await db.tasks.insert_one(doc)
+    return doc
+
+
+async def _update_task(task_id: str, status: str, output_data: Dict[str, Any] = None, error: str = None):
+    update = {
+        "status": status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    if output_data is not None:
+        update["output_data"] = output_data
+    if error is not None:
+        update["error"] = error
+    if db is not None:
+        await db.tasks.update_one({"id": task_id}, {"$set": update})
+
+
+async def _execute_run_complete_cycle(task_id: str, products_per_cycle: int):
+    await _update_task(task_id, "in_progress")
     try:
-        task = await db.ai_tasks.find_one({"id": task_id}, {"_id": 0})
+        results = await ceo_orchestrator.run_complete_launch_cycle(products_per_cycle=products_per_cycle)
+        await _update_task(task_id, "completed", output_data=results)
+    except Exception as e:
+        await _update_task(task_id, "failed", error=str(e))
+        if db is not None:
+            await db.error_logs.insert_one({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "endpoint": "/api/ai/run-complete-launch-cycle",
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            })
+
+
+async def _execute_generate_product_suite(task_id: str):
+    await _update_task(task_id, "in_progress")
+    try:
+        results = await ceo_orchestrator.generate_product_suite()
+        await _update_task(task_id, "completed", output_data=results)
+    except Exception as e:
+        await _update_task(task_id, "failed", error=str(e))
+        if db is not None:
+            await db.error_logs.insert_one({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "endpoint": "/api/ai/generate-product-suite",
+                "error_type": type(e).__name__,
+                "error_message": str(e)
+            })
+
+
+@api_router.post("/api/ai/run-complete-launch-cycle")
+async def queue_run_complete_launch_cycle(
+    background_tasks: BackgroundTasks,
+    products_per_cycle: int = 3,
+    _: bool = Depends(require_api_key)
+):
+    task_doc = await _record_task("run_complete_launch_cycle", {"products_per_cycle": products_per_cycle})
+    background_tasks.add_task(_execute_run_complete_cycle, task_doc["id"], products_per_cycle)
+    return {"task_id": task_doc["id"], "status": "queued"}
+
+
+@api_router.post("/api/ai/generate-product-suite")
+async def queue_generate_product_suite(
+    background_tasks: BackgroundTasks,
+    _: bool = Depends(require_api_key)
+):
+    task_doc = await _record_task("generate_product_suite")
+    background_tasks.add_task(_execute_generate_product_suite, task_doc["id"])
+    return {"task_id": task_doc["id"], "status": "queued"}
+
+
+@api_router.get("/api/tasks/{task_id}")
+async def get_task_status(task_id: str):
+    """Get status of a specific queued task"""
+    try:
+        task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        return task
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# old /ai/tasks route kept for backward compatibility
+@api_router.get("/ai/tasks/{task_id}")
+async def get_task_status_old(task_id: str):
+    try:
+        task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        return task
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
@@ -775,7 +1024,7 @@ class GenerateSocialPostsRequest(BaseModel):
     num_posts: int = 5
 
 @api_router.post("/ai/generate-social-posts")
-async def generate_social_posts(request: GenerateSocialPostsRequest):
+async def generate_social_posts(request: GenerateSocialPostsRequest, _: bool = Depends(require_api_key)):
     """Generate social media posts for a product"""
     try:
         # Get product
