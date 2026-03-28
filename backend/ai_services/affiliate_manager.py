@@ -1,6 +1,6 @@
 """
 Affiliate Management AI
-Recruits affiliates, manages campaigns, tracks performance
+Recruits affiliates, manages campaigns, tracks performance, and maximizes revenue
 """
 import asyncio
 from typing import Dict, Any, List
@@ -13,88 +13,195 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 load_dotenv()
 
 class AffiliateManager:
-    def __init__(self):
+    def __init__(self, db=None):
         self.api_key = os.environ.get('EMERGENT_LLM_KEY')
-        
+        self.db = db
+        self.llm_chat = LlmChat
+
     async def generate_affiliate_program(self, products: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Generate affiliate program structure and recruitment materials
-        
+        Generate high-converting affiliate program structure and recruitment materials
+
         Args:
             products: List of products to include in affiliate program
-            
+
         Returns:
-            Affiliate program details and assets
+            Affiliate program details and assets optimized for maximum revenue
         """
-        
+
         # Initialize AI chat
         chat = LlmChat(
             api_key=self.api_key,
             session_id=f"affiliate-mgr-{datetime.now().timestamp()}",
-            system_message="You are an affiliate marketing expert. You design profitable affiliate programs, create compelling recruitment materials, and structure commission plans that motivate partners."
+            system_message="You are a top-tier affiliate marketing expert who designs 7-figure affiliate programs. You create irresistible commission structures, compelling recruitment pitches, and conversion-optimized marketing assets that turn affiliates into revenue-generating machines."
         ).with_model("openai", "gpt-5.2")
-        
+
         product_list = "\n".join([
-            f"- {p.get('title', 'Unknown')} (${p.get('price', 0)})"
+            f"- {p.get('title', 'Unknown')} (${p.get('price', 0)}) - {p.get('category', 'Digital Product')}"
             for p in products[:10]
         ])
-        
-        prompt = f"""
-Design a comprehensive affiliate program for these digital products:
 
+        prompt = f"""
+Design a HIGH-CONVERSION affiliate program that will generate massive revenue. Focus on:
+
+1. COMMISSION STRUCTURE THAT MOTIVATES:
+   - Base commission: 35-45% (higher than industry standard)
+   - Tiered bonuses: Massive rewards for top performers
+   - Recurring commissions on subscriptions
+   - Lifetime commissions on referrals
+   - Performance bonuses: $500-$5000 for hitting milestones
+
+2. IRRESISTIBLE RECRUITMENT PITCH:
+   - Compelling headline that grabs attention
+   - Specific earning potential ($X-$Y/month examples)
+   - Social proof (top affiliate earnings)
+   - Risk-free trial period
+   - Exclusive benefits only top affiliates get
+
+3. CONVERSION-OPTIMIZED MARKETING ASSETS:
+   - Email sequences that convert at 15%+
+   - Social media posts that go viral
+   - Landing pages that convert at 8%+
+   - Video scripts for affiliate recruitment
+
+4. AFFILIATE TIERS WITH REAL INCENTIVES:
+   - Bronze/Silver/Gold/Diamond/Elite levels
+   - Requirements that are achievable but rewarding
+   - Exclusive perks: Private webinars, 1-on-1 coaching, custom creatives
+
+5. REVENUE-MAXIMIZING CAMPAIGNS:
+   - Limited-time offers with 50%+ commissions
+   - Bundle promotions with massive payouts
+   - Seasonal campaigns timed for maximum sales
+   - Affiliate contests with $10K+ prize pools
+
+6. AUTOMATION & TOOLS:
+   - Affiliate dashboard features
+   - Real-time tracking and reporting
+   - Automated payouts (weekly/monthly)
+   - Marketing automation sequences
+
+Products to promote:
 {product_list}
 
-Provide:
-
-1. Commission Structure:
-   - Base commission rate (%)
-   - Tiered commission levels (based on sales volume)
-   - Special bonuses
-
-2. Affiliate Recruitment Pitch:
-   - Why join this program?
-   - Earning potential
-   - Support provided
-
-3. Marketing Assets for Affiliates:
-   - Email templates
-   - Social media post templates
-   - Banner ad copy
-
-4. Performance Tiers:
-   - Bronze/Silver/Gold/Platinum levels
-   - Requirements for each tier
-   - Benefits per tier
-
-5. Promotional Campaigns:
-   - 3 campaign ideas for affiliates
-   - Special offers they can promote
-
-Return as JSON:
+Return as JSON with these exact keys:
 {{
   "commission_structure": {{
-    "base_rate": 30,
+    "base_rate": 40,
+    "recurring_rate": 25,
+    "lifetime_rate": 5,
     "tiers": [
-      {{"level": "Bronze", "sales_required": 5, "rate": 30}},
-      {{"level": "Silver", "sales_required": 20, "rate": 35}},
-      {{"level": "Gold", "sales_required": 50, "rate": 40}}
+      {{"level": "Bronze", "sales_required": 3, "rate": 40, "bonus": "$100 first sale bonus"}},
+      {{"level": "Silver", "sales_required": 15, "rate": 45, "bonus": "$500 monthly + private webinar"}},
+      {{"level": "Gold", "sales_required": 50, "rate": 50, "bonus": "$2000 monthly + 1-on-1 coaching"}},
+      {{"level": "Diamond", "sales_required": 150, "rate": 55, "bonus": "$5000 monthly + custom creatives"}},
+      {{"level": "Elite", "sales_required": 500, "rate": 60, "bonus": "$10000 monthly + revenue share"}}
     ],
-    "bonuses": ["Bonus description"]
+    "bonuses": ["First sale bonus: $100", "Monthly top 10: $500 each", "Annual top performer: $50000"]
   }},
   "recruitment_pitch": {{
-    "headline": "Join Our Program",
-    "benefits": ["Benefit 1"],
-    "earning_potential": "Earn $X per month",
-    "support": "Support description"
+    "headline": "Earn $10,000+ Monthly Promoting Premium Digital Products",
+    "hook": "Why struggle with low commissions when you can earn elite payouts?",
+    "benefits": ["40-60% commissions (highest in industry)", "Recurring income from subscriptions", "Lifetime commissions on referrals", "Exclusive marketing materials"],
+    "earning_potential": "Our top affiliates earn $5,000-$50,000/month. Average affiliate earns $2,500/month",
+    "social_proof": ["Sarah earned $23,450 last month", "Mike hit $67,890 in Q4", "Top 10 affiliates averaged $15,200/month"],
+    "guarantee": "30-day money-back guarantee on commissions",
+    "support": "Dedicated affiliate manager, weekly training calls, exclusive resources, and priority support"
   }},
   "marketing_assets": {{
-    "email_templates": ["Template 1"],
-    "social_templates": ["Post template"],
-    "banner_copy": ["Banner text"]
+    "email_templates": [
+      {{
+        "name": "Product Launch Sequence",
+        "subject": "🚀 [PRODUCT] Just Launched - 50% Commission Inside",
+        "open_rate": "35%",
+        "conversion_rate": "8.5%"
+      }},
+      {{
+        "name": "Limited Time Offer",
+        "subject": "⏰ 24 Hours Only: 60% Commission on [PRODUCT]",
+        "open_rate": "42%",
+        "conversion_rate": "12.3%"
+      }}
+    ],
+    "social_templates": [
+      {{
+        "platform": "Instagram",
+        "content": "Just discovered this game-changing [PRODUCT CATEGORY] that solved my biggest problem. And get this - you can earn 50% commission promoting it! Link in bio 💰",
+        "engagement_rate": "8.2%"
+      }},
+      {{
+        "platform": "Twitter",
+        "content": "Tired of 10% commissions? This program pays 40-60% on premium digital products. Top affiliates earning $10K+/month. DM for details.",
+        "engagement_rate": "12.1%"
+      }}
+    ],
+    "landing_pages": [
+      {{
+        "name": "Affiliate Signup Funnel",
+        "conversion_rate": "15.7%",
+        "features": ["Video testimonials", "Earnings calculator", "Success stories"]
+      }}
+    ],
+    "video_scripts": [
+      {{
+        "name": "Recruitment Video",
+        "length": "3:45",
+        "hook": "What if I told you there's an affiliate program that pays 3x more than ClickBank?",
+        "conversion_rate": "22.4%"
+      }}
+    ]
+  }},
+  "performance_tiers": {{
+    "bronze": {{"requirement": "3 sales/month", "benefits": ["40% commission", "Basic marketing kit"]}},
+    "silver": {{"requirement": "15 sales/month", "benefits": ["45% commission", "Advanced marketing kit", "Weekly training"]}},
+    "gold": {{"requirement": "50 sales/month", "benefits": ["50% commission", "Custom creatives", "Priority support", "Monthly bonus"]}},
+    "diamond": {{"requirement": "150 sales/month", "benefits": ["55% commission", "Dedicated manager", "Revenue share", "VIP events"]}},
+    "elite": {{"requirement": "500 sales/month", "benefits": ["60% commission", "Partnership status", "Custom development", "Board seat"]}}
   }},
   "campaigns": [
-    {{"name": "Campaign name", "offer": "Special offer", "duration": "30 days"}}
-  ]
+    {{
+      "name": "Launch Blitz",
+      "offer": "60% commission on first 100 sales",
+      "duration": "7 days",
+      "expected_revenue": "$50,000+",
+      "affiliate_bonus": "$1000 for top performer"
+    }},
+    {{
+      "name": "Bundle Bonanza",
+      "offer": "50% commission on product bundles",
+      "duration": "30 days",
+      "expected_revenue": "$25,000+",
+      "affiliate_bonus": "$500 monthly bonus"
+    }},
+    {{
+      "name": "Elite Affiliate Contest",
+      "offer": "Double commissions + $10,000 prize pool",
+      "duration": "90 days",
+      "expected_revenue": "$100,000+",
+      "affiliate_bonus": "$10,000 grand prize"
+    }},
+    {{
+      "name": "Holiday Hyperdrive",
+      "offer": "55% commission + holiday bonuses",
+      "duration": "45 days",
+      "expected_revenue": "$75,000+",
+      "affiliate_bonus": "$2000 holiday bonus"
+    }}
+  ],
+  "automation_tools": {{
+    "dashboard_features": ["Real-time sales tracking", "Commission calculator", "Marketing asset library", "Performance analytics"],
+    "payout_schedule": "Weekly automatic payouts",
+    "reporting": "Daily/weekly/monthly automated reports",
+    "marketing_automation": ["Welcome sequence", "Performance alerts", "Re-engagement campaigns"]
+  }},
+  "revenue_projections": {{
+    "month_1": "$15,000",
+    "month_3": "$45,000",
+    "month_6": "$120,000",
+    "month_12": "$300,000",
+    "break_even_affiliates": 25,
+    "profitability_affiliates": 50
+  }}
 }}
 """
         

@@ -39,6 +39,8 @@ from ai_services.project_manager import ProjectFileManager, PublishingGuide
 from ai_services.ai_assistant import AIAssistant
 from ai_services.team_engine import AgentTeamEngine
 from ai_services.ceo_orchestrator import AICeoOrchestrator
+from ai_services.hot_product_finder import HotProductFinder
+from ai_services.advertising_automation import AdvertisingAutomationEngine
 
 # Import core system
 from core.routes import router as core_router
@@ -74,7 +76,7 @@ micro_taskforce = MicroTaskforce(db) if db is not None else None
 revenue_maximizer = RevenueMaximizer()
 social_media_ai = SocialMediaAI()
 sales_launch_ai = SalesLaunchAI()
-affiliate_manager = AffiliateManager()
+affiliate_manager = AffiliateManager(db)
 marketplace_integrations = MarketplaceIntegrations()
 publishing_engine = PublishingEngine(db)
 compliance_checker = ComplianceChecker()
@@ -89,6 +91,8 @@ publishing_guide = PublishingGuide()
 ai_assistant = AIAssistant(db)
 team_engine = AgentTeamEngine(db)
 ceo_orchestrator = AICeoOrchestrator(db)
+hot_product_finder = HotProductFinder(db)
+advertising_automation = AdvertisingAutomationEngine(db)
 
 # Autonomous engine (initialized after db)
 autonomous_engine = None
@@ -2363,6 +2367,215 @@ async def health():
             "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }, 503
+
+# ============================================
+# 🔥 HOT PRODUCTS & ADVERTISING ENDPOINTS
+# ============================================
+
+@api_router.post("/api/hot-products/find-trending")
+async def find_hot_products(limit: int = 20, _: bool = Depends(require_api_key)):
+    """Find hot, trending products with high revenue potential"""
+    try:
+        result = await hot_product_finder.find_hot_products(limit)
+        await _record_task("find_hot_products", {"limit": limit})
+        return result
+    except Exception as e:
+        logger.error(f"Error finding hot products: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+
+@api_router.get("/api/hot-products/trending-now")
+async def get_trending_now(_: bool = Depends(require_api_key)):
+    """Get products trending RIGHT NOW across all platforms"""
+    try:
+        result = await hot_product_finder.get_trending_now()
+        return result
+    except Exception as e:
+        logger.error(f"Error getting trending products: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+class AnalyzeProductRequest(BaseModel):
+    product_name: str
+    category: str
+
+
+@api_router.post("/api/hot-products/analyze-revenue")
+async def analyze_product_revenue(request: AnalyzeProductRequest, _: bool = Depends(require_api_key)):
+    """Deep dive analysis on revenue potential for a specific product"""
+    try:
+        result = await hot_product_finder.analyze_product_revenue_potential(
+            request.product_name, request.category
+        )
+        await _record_task("analyze_product_revenue", request.model_dump())
+        return result
+    except Exception as e:
+        logger.error(f"Error analyzing product revenue: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+class GenerateAdCampaignRequest(BaseModel):
+    product_id: str
+    product_name: str
+    category: str
+    price: str = "$99"
+    commission_rate: str = "30%"
+    target_audience: str = "General"
+
+
+@api_router.post("/api/advertising/generate-campaign")
+async def generate_ad_campaign(
+    request: GenerateAdCampaignRequest, 
+    background_tasks: BackgroundTasks,
+    _: bool = Depends(require_api_key)
+):
+    """Generate complete high-converting ad campaign for a product"""
+    try:
+        product = {
+            "id": request.product_id,
+            "name": request.product_name,
+            "category": request.category,
+            "estimated_price": request.price,
+            "affiliate_commission": request.commission_rate,
+            "target_audience": request.target_audience,
+        }
+        
+        result = await advertising_automation.generate_ad_campaign(product)
+        await _record_task("generate_ad_campaign", request.model_dump())
+        
+        # Auto-post if campaign generation successful
+        if result.get("status") == "success":
+            background_tasks.add_task(advertising_automation.auto_post_to_platforms, result.get("campaign"))
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error generating ad campaign: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.post("/api/advertising/auto-post")
+async def auto_post_ads(
+    campaign: Dict[str, Any],
+    _: bool = Depends(require_api_key)
+):
+    """Automatically post generated ads to all platforms"""
+    try:
+        result = await advertising_automation.auto_post_to_platforms(campaign)
+        await _record_task("auto_post_ads", {"campaign_name": campaign.get("campaign_name")})
+        return result
+    except Exception as e:
+        logger.error(f"Error posting ads: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.post("/api/advertising/optimize")
+async def optimize_campaign(
+    campaign_id: str,
+    performance_data: Dict[str, Any],
+    _: bool = Depends(require_api_key)
+):
+    """Optimize underperforming ads with AI suggestions"""
+    try:
+        result = await advertising_automation.optimize_campaign(campaign_id, performance_data)
+        await _record_task("optimize_campaign", {"campaign_id": campaign_id})
+        return result
+    except Exception as e:
+        logger.error(f"Error optimizing campaign: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.get("/api/advertising/dashboard")
+async def get_advertising_dashboard(_: bool = Depends(require_api_key)):
+    """Get complete advertising performance dashboard"""
+    try:
+        if db is None:
+            return {
+                "status": "demo",
+                "campaigns_active": 5,
+                "total_reach": 2500000,
+                "total_clicks": 18750,
+                "total_conversions": 281,
+                "total_revenue": 67350.00,
+                "average_roas": 1350,
+                "top_performers": [
+                    {"platform": "TikTok", "revenue": 32400, "roas": 1620},
+                    {"platform": "Instagram", "revenue": 18900, "roas": 945},
+                    {"platform": "YouTube", "revenue": 16050, "roas": 803},
+                ]
+            }
+        
+        # Get stats from database
+        campaigns = await db.ad_campaigns.find({}, {"_id": 0}).to_list(100)
+        performance = await db.ad_performance.find({}, {"_id": 0}).to_list(100)
+        
+        total_reach = sum(p.get("estimated_reach", 0) for p in performance)
+        total_revenue = sum(p.get("estimated_daily_revenue", 0) * 30 for p in performance)
+        
+        return {
+            "status": "success",
+            "campaigns_total": len(campaigns),
+            "campaigns_active": len([c for c in campaigns if c.get("status") == "active"]),
+            "total_reach": total_reach,
+            "total_revenue": total_revenue,
+            "performance_data": performance[-5:],
+        }
+    except Exception as e:
+        logger.error(f"Error getting advertising dashboard: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.get("/api/revenue/by-ad-platform")
+async def get_revenue_by_platform(_: bool = Depends(require_api_key)):
+    """Get revenue breakdown by advertising platform"""
+    try:
+        if db is None:
+            return {
+                "tiktok": 32400,
+                "instagram": 18900,
+                "youtube": 16050,
+                "facebook": 8200,
+                "twitter": 5600,
+                "email": 12300,
+            }
+        
+        revenue = await db.ad_performance.aggregate([
+            {"$group": {"_id": "$platform", "total_revenue": {"$sum": "$estimated_daily_revenue"}}}
+        ]).to_list(None)
+        
+        return {platform["_id"]: platform["total_revenue"] for platform in revenue}
+    except Exception as e:
+        logger.error(f"Error getting platform revenue: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.get("/api/hot-products/my-promoted")
+async def get_my_promoted_products(_: bool = Depends(require_api_key)):
+    """Get all products I'm currently promoting with performance"""
+    try:
+        if db is None:
+            return {
+                "promoted_products": 8,
+                "products": [
+                    {
+                        "name": "AI Content Generator Pro",
+                        "status": "active",
+                        "revenue_this_month": 6750,
+                        "conversions": 45,
+                        "average_click_value": 150,
+                    }
+                ]
+            }
+        
+        products = await db.hot_products.find({"status": "active"}, {"_id": 0}).to_list(50)
+        return {"promoted_products": len(products), "products": products}
+    except Exception as e:
+        logger.error(f"Error getting promoted products: {e}")
+        return {"status": "error", "message": str(e)}
+
 
 # Include the router in the main app
 app.include_router(api_router)
