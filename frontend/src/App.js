@@ -48,6 +48,8 @@ const Dashboard = () => {
   const [showProjectFiles, setShowProjectFiles] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   useEffect(() => {
     fetchDashboardData();
     // Refresh data every 30 seconds
@@ -449,28 +451,95 @@ const Dashboard = () => {
 
   return (
     <div className="app-container" data-testid="ceo-dashboard">
-      <div className="main-content">
-        {/* Quantum Cyber Header */}
-        <div className="header">
-          <div className="header-left">
-            <h1 data-testid="dashboard-title">
-              <Sparkles size={40} style={{display: 'inline-block', marginRight: '1rem', filter: 'drop-shadow(0 0 10px #06b6d4)'}} />
-              AI EMPIRE CEO
+      {/* Mobile Menu Button */}
+      <button 
+        className="mobile-menu-btn"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <Settings size={24} />
+      </button>
+
+      {/* Quantum Sidebar */}
+      <div className={`quantum-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="logo-content">
+            <h1>
+              <Sparkles size={24} />
+              AI EMPIRE
             </h1>
-            <p style={{color: 'var(--color-text-tertiary)', marginTop: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px', fontSize: 'var(--font-size-xs)'}}>
-              AUTONOMOUS QUANTUM SYSTEM
-            </p>
-          </div>
-          <div className="header-right">
-            <div className="system-status">
-              <div className="status-pulse"></div>
-              <span style={{fontWeight: '700', fontSize: 'var(--font-size-sm)', color: '#06b6d4', textTransform: 'uppercase', letterSpacing: '1px'}}>
-                SYSTEM ONLINE
-              </span>
-            </div>
+            <p className="logo-subtitle">Quantum System</p>
           </div>
         </div>
 
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-section-title">Main</div>
+            <button
+              onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+              className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+            >
+              <Activity size={18} />
+              <span>Overview</span>
+            </button>
+            <button
+              onClick={() => { setActiveTab('marketing'); setSidebarOpen(false); }}
+              className={`nav-item ${activeTab === 'marketing' ? 'active' : ''}`}
+            >
+              <TrendingUp size={18} />
+              <span>Marketing</span>
+            </button>
+            <button
+              onClick={() => { setActiveTab('automation'); setSidebarOpen(false); }}
+              className={`nav-item ${activeTab === 'automation' ? 'active' : ''}`}
+            >
+              <Settings size={18} />
+              <span>Automation</span>
+            </button>
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-section-title">Tools</div>
+            <button
+              onClick={() => { setShowAIAssistant(true); setSidebarOpen(false); }}
+              className="nav-item"
+            >
+              <Sparkles size={18} />
+              <span>AI Assistant</span>
+            </button>
+            <button
+              onClick={() => { setShowKeyVault(true); setSidebarOpen(false); }}
+              className="nav-item"
+            >
+              <Key size={18} />
+              <span>Key Vault</span>
+            </button>
+            <button
+              onClick={() => { setShowOpportunityHunter(true); setSidebarOpen(false); }}
+              className="nav-item"
+            >
+              <Search size={18} />
+              <span>Opportunities</span>
+            </button>
+            <button
+              onClick={() => { setShowProjectFiles(true); setSidebarOpen(false); }}
+              className="nav-item"
+            >
+              <Package size={18} />
+              <span>Project Files</span>
+            </button>
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="system-status-sidebar">
+            <div className="status-pulse"></div>
+            <span className="status-text">Online</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="main-content">
         <div className="content">
 
         {/* Stats Overview - Premium Cards */}
