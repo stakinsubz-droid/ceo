@@ -9,12 +9,15 @@ import {
 import { 
   TrendingUp, DollarSign, Package, AlertCircle, 
   CheckCircle, Clock, ExternalLink, Sparkles, Activity,
-  Key, Target, Settings, Search
+  Key, Target, Settings, Search, Users, Palette
 } from 'lucide-react';
+import Layout from './components/Layout';
 import KeyVault from './components/KeyVault';
 import OpportunityHunter from './components/OpportunityHunter';
 import ProjectFiles from './components/ProjectFiles';
 import AIAssistant from './components/AIAssistant';
+import AgentTeamsHub from './pages/AgentTeamsHub';
+import ProductStudio from './pages/ProductStudio';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -474,13 +477,18 @@ const Dashboard = () => {
         <nav className="sidebar-nav">
           <div className="nav-section">
             <div className="nav-section-title">Main</div>
-            <button
-              onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
-              className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            >
+            <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
               <Activity size={18} />
-              <span>Overview</span>
-            </button>
+              <span>Dashboard</span>
+            </Link>
+            <Link to="/agent-teams" className={`nav-item ${window.location.pathname === '/agent-teams' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
+              <Users size={18} />
+              <span>Agent Teams</span>
+            </Link>
+            <Link to="/product-studio" className={`nav-item ${window.location.pathname === '/product-studio' ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
+              <Palette size={18} />
+              <span>Product Studio</span>
+            </Link>
             <button
               onClick={() => { setActiveTab('marketing'); setSidebarOpen(false); }}
               className={`nav-item ${activeTab === 'marketing' ? 'active' : ''}`}
@@ -1466,14 +1474,40 @@ const Dashboard = () => {
 };
 
 function App() {
+  const [showKeyVault, setShowKeyVault] = useState(false);
+  const [showOpportunityHunter, setShowOpportunityHunter] = useState(false);
+  const [showProjectFiles, setShowProjectFiles] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+
   return (
-    <div className="App">
-      <BrowserRouter>
+    <BrowserRouter>
+      <Layout
+        onShowAIAssistant={() => setShowAIAssistant(true)}
+        onShowKeyVault={() => setShowKeyVault(true)}
+        onShowOpportunityHunter={() => setShowOpportunityHunter(true)}
+        onShowProjectFiles={() => setShowProjectFiles(true)}
+      >
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/agent-teams" element={<AgentTeamsHub />} />
+          <Route path="/product-studio" element={<ProductStudio />} />
         </Routes>
-      </BrowserRouter>
-    </div>
+
+        {/* Global Modals */}
+        {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
+        {showOpportunityHunter && <OpportunityHunter onClose={() => setShowOpportunityHunter(false)} />}
+        {showProjectFiles && <ProjectFiles onClose={() => setShowProjectFiles(false)} />}
+        {showAIAssistant && (
+          <AIAssistant 
+            onClose={() => setShowAIAssistant(false)} 
+            onAction={(action) => {
+              if (action === 'open_vault') setShowKeyVault(true);
+              if (action === 'open_hunter') setShowOpportunityHunter(true);
+            }}
+          />
+        )}
+      </Layout>
+    </BrowserRouter>
   );
 }
 
