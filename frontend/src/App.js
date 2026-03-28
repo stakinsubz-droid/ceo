@@ -437,128 +437,159 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-2xl flex items-center gap-3">
-          <Activity className="animate-spin" size={32} />
-          Loading CEO Dashboard...
+      <div className="app-container flex items-center justify-center">
+        <div className="text-center">
+          <div className="spinner mx-auto mb-6"></div>
+          <h2 className="text-3xl font-bold mb-2" style={{
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Loading CEO System
+          </h2>
+          <p style={{color: 'var(--color-text-secondary)'}}>Initializing autonomous engine...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6" data-testid="ceo-dashboard">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-4xl font-bold flex items-center gap-3" data-testid="dashboard-title">
-              <Sparkles className="text-purple-400" size={40} />
-              AI Empire CEO Dashboard
+    <div className="app-container" data-testid="ceo-dashboard">
+      <div className="main-content">
+        {/* Premium Header */}
+        <div className="header">
+          <div className="header-left">
+            <h1 style={{
+              fontSize: 'var(--font-size-4xl)',
+              fontWeight: '800',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-md)'
+            }} data-testid="dashboard-title">
+              <Sparkles size={40} style={{color: '#a78bfa'}} />
+              AI Empire CEO
             </h1>
-            <p className="text-gray-400 mt-2">Fully Autonomous Product Generation System</p>
+            <p style={{color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>Fully Autonomous Product Generation System</p>
           </div>
-          <div className="flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-lg">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            System Autonomous
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20" data-testid="stat-total-products">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Total Products</p>
-                <p className="text-3xl font-bold mt-1">{stats?.total_products || 0}</p>
-                <p className="text-purple-400 text-sm mt-2">+{stats?.products_today || 0} today</p>
-              </div>
-              <Package className="text-purple-400" size={40} />
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20" data-testid="stat-total-revenue">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Total Revenue</p>
-                <p className="text-3xl font-bold mt-1">${stats?.total_revenue?.toFixed(2) || '0.00'}</p>
-                <p className="text-green-400 text-sm mt-2">+${stats?.revenue_today?.toFixed(2) || '0.00'} today</p>
-              </div>
-              <DollarSign className="text-green-400" size={40} />
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20" data-testid="stat-pending-tasks">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Pending AI Tasks</p>
-                <p className="text-3xl font-bold mt-1">{stats?.pending_tasks || 0}</p>
-                <p className="text-yellow-400 text-sm mt-2">In queue</p>
-              </div>
-              <Clock className="text-yellow-400" size={40} />
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20" data-testid="stat-opportunities">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Active Opportunities</p>
-                <p className="text-3xl font-bold mt-1">{stats?.active_opportunities || 0}</p>
-                <p className="text-blue-400 text-sm mt-2">Trending niches</p>
-              </div>
-              <TrendingUp className="text-blue-400" size={40} />
+          <div className="header-right">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#10b981',
+              padding: '0.5rem 1rem',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid rgba(16, 185, 129, 0.3)'
+            }}>
+              <div style={{width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', animation: 'pulse 2s infinite'}}></div>
+              <span style={{fontWeight: '600', fontSize: 'var(--font-size-sm)'}}>System Autonomous</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Action Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div className="content">
+
+        {/* Stats Overview - Premium Cards */}
+        <div className="stats-grid">
+          <div className="stat-card stat-card-primary glass-hover" data-testid="stat-total-products">
+            <div className="stat-header">
+              <div className="stat-icon">
+                <Package />
+              </div>
+            </div>
+            <div className="stat-label">Total Products</div>
+            <div className="stat-value">
+              <span className="value">{stats?.total_products || 0}</span>
+              <span className="trend trend-up">
+                <TrendingUp size={14} />
+                +{stats?.products_today || 0}
+              </span>
+            </div>
+          </div>
+
+          <div className="stat-card stat-card-success glass-hover" data-testid="stat-total-revenue">
+            <div className="stat-header">
+              <div className="stat-icon">
+                <DollarSign />
+              </div>
+            </div>
+            <div className="stat-label">Total Revenue</div>
+            <div className="stat-value">
+              <span className="value">${stats?.total_revenue?.toFixed(2) || '0.00'}</span>
+              <span className="trend trend-up">
+                <TrendingUp size={14} />
+                +${stats?.revenue_today?.toFixed(2) || '0'}
+              </span>
+            </div>
+          </div>
+
+          <div className="stat-card stat-card-warning glass-hover" data-testid="stat-pending-tasks">
+            <div className="stat-header">
+              <div className="stat-icon">
+                <Clock />
+              </div>
+            </div>
+            <div className="stat-label">Pending Tasks</div>
+            <div className="stat-value">
+              <span className="value">{stats?.pending_tasks || 0}</span>
+            </div>
+            <p style={{fontSize: 'var(--font-size-xs)', color: 'var(--color-warning)', marginTop: '0.5rem'}}>In queue</p>
+          </div>
+
+          <div className="stat-card stat-card-info glass-hover" data-testid="stat-opportunities">
+            <div className="stat-header">
+              <div className="stat-icon">
+                <Target />
+              </div>
+            </div>
+            <div className="stat-label">Opportunities</div>
+            <div className="stat-value">
+              <span className="value">{stats?.active_opportunities || 0}</span>
+            </div>
+            <p style={{fontSize: 'var(--font-size-xs)', color: 'var(--color-info)', marginTop: '0.5rem'}}>Trending niches</p>
+          </div>
+        </div>
+
+        {/* Quick Action Buttons - Premium */}
+        <div className="action-bar">
           <button
             onClick={() => setShowAIAssistant(true)}
-            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-xl p-4 flex items-center gap-3 transition-all"
+            className="btn-primary"
             data-testid="open-assistant-btn"
           >
-            <span className="text-2xl">🤖</span>
-            <div className="text-left">
-              <p className="font-bold">Atlas AI</p>
-              <p className="text-white/70 text-xs">Your assistant</p>
-            </div>
+            <Sparkles size={20} />
+            <span>Atlas AI Assistant</span>
           </button>
           <button
             onClick={() => setShowProjectFiles(true)}
-            className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 rounded-xl p-4 flex items-center gap-3 transition-all"
+            className="btn-secondary"
             data-testid="open-files-btn"
           >
-            <span className="text-2xl">📁</span>
-            <div className="text-left">
-              <p className="font-bold">Project Files</p>
-              <p className="text-white/70 text-xs">Download & manage</p>
-            </div>
+            📁 Project Files
           </button>
           <button
             onClick={() => setShowKeyVault(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl p-4 flex items-center gap-3 transition-all"
+            className="btn-secondary"
             data-testid="open-key-vault-btn"
           >
-            <span className="text-2xl">🔐</span>
-            <div className="text-left">
-              <p className="font-bold">Key Vault</p>
-              <p className="text-white/70 text-xs">112+ platforms</p>
-            </div>
+            <Key size={16} />
+            Key Vault (112+)
           </button>
           <button
             onClick={() => setShowOpportunityHunter(true)}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 rounded-xl p-4 flex items-center gap-3 transition-all"
+            className="btn-secondary"
             data-testid="open-hunter-btn"
           >
-            <span className="text-2xl">🎯</span>
-            <div className="text-left">
-              <p className="font-bold">Opportunity Hunter</p>
-              <p className="text-white/70 text-xs">Find income streams</p>
-            </div>
+            <Search size={16} />
+            Opportunity Hunter
           </button>
         </div>
-      </div>
 
       {/* Modals */}
       {showKeyVault && <KeyVault onClose={() => setShowKeyVault(false)} />}
@@ -575,48 +606,55 @@ const Dashboard = () => {
         />
       )}
 
-      {/* AI Control Panel */}
+      {/* AI Message - Premium Alert */}
       {aiMessage && (
-        <div className="mb-6 bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
-          <p className="text-white text-center font-medium">{aiMessage}</p>
+        <div className="glass" style={{
+          marginBottom: 'var(--spacing-xl)',
+          padding: 'var(--spacing-lg)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-primary)',
+          boxShadow: '0 0 20px var(--color-primary-glow)',
+          animation: 'fadeInUp 300ms ease'
+        }}>
+          <p style={{
+            textAlign: 'center',
+            fontWeight: '600',
+            color: 'var(--color-text-primary)',
+            whiteSpace: 'pre-line'
+          }}>{aiMessage}</p>
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="mb-6 bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20">
-        <div className="flex gap-2">
+      {/* Navigation Tabs - Premium */}
+      <div className="glass" style={{
+        marginBottom: 'var(--spacing-xl)',
+        padding: 'var(--spacing-sm)',
+        borderRadius: 'var(--radius-lg)'
+      }}>
+        <div style={{display: 'flex', gap: 'var(--spacing-sm)'}}>
           <button
             onClick={() => setActiveTab('overview')}
-            className={`flex-1 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'overview' 
-                ? 'bg-purple-600 text-white' 
-                : 'text-gray-300 hover:bg-white/5'
-            }`}
+            className={activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}
+            style={{flex: 1, justifyContent: 'center'}}
             data-testid="tab-overview"
           >
             📊 Overview
           </button>
           <button
             onClick={() => setActiveTab('marketing')}
-            className={`flex-1 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'marketing' 
-                ? 'bg-purple-600 text-white' 
-                : 'text-gray-300 hover:bg-white/5'
-            }`}
+            className={activeTab === 'marketing' ? 'btn-primary' : 'btn-secondary'}
+            style={{flex: 1, justifyContent: 'center'}}
             data-testid="tab-marketing"
           >
-            📈 Marketing & Revenue
+            📈 Marketing
           </button>
           <button
             onClick={() => setActiveTab('automation')}
-            className={`flex-1 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'automation' 
-                ? 'bg-purple-600 text-white' 
-                : 'text-gray-300 hover:bg-white/5'
-            }`}
+            className={activeTab === 'automation' ? 'btn-primary' : 'btn-secondary'}
+            style={{flex: 1, justifyContent: 'center'}}
             data-testid="tab-automation"
           >
-            🤖 Automation & Analytics
+            🤖 Automation
           </button>
         </div>
       </div>
@@ -1374,6 +1412,8 @@ const Dashboard = () => {
           )}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };
