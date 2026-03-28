@@ -846,7 +846,7 @@ class SecureKeyVault:
     
     def _get_or_create_key(self) -> bytes:
         """Get or create encryption key"""
-        key_path = Path("/app/backend/.vault_key")
+        key_path = Path("/app/.vault_key")
         if key_path.exists():
             return key_path.read_bytes()
         else:
