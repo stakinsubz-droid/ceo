@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "@/App_Premium.css";
+import "@/App_Quantum.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { 
@@ -437,18 +437,11 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="app-container flex items-center justify-center">
-        <div className="text-center">
-          <div className="spinner mx-auto mb-6"></div>
-          <h2 className="text-3xl font-bold mb-2" style={{
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            Loading CEO System
-          </h2>
-          <p style={{color: 'var(--color-text-secondary)'}}>Initializing autonomous engine...</p>
+      <div className="quantum-loader-overlay">
+        <div className="quantum-loader">
+          <div className="quantum-spinner"></div>
+          <h2>INITIALIZING</h2>
+          <p>Quantum Core Booting...</p>
         </div>
       </div>
     );
@@ -457,38 +450,23 @@ const Dashboard = () => {
   return (
     <div className="app-container" data-testid="ceo-dashboard">
       <div className="main-content">
-        {/* Premium Header */}
+        {/* Quantum Cyber Header */}
         <div className="header">
           <div className="header-left">
-            <h1 style={{
-              fontSize: 'var(--font-size-4xl)',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-md)'
-            }} data-testid="dashboard-title">
-              <Sparkles size={40} style={{color: '#a78bfa'}} />
-              AI Empire CEO
+            <h1 data-testid="dashboard-title">
+              <Sparkles size={40} style={{display: 'inline-block', marginRight: '1rem', filter: 'drop-shadow(0 0 10px #06b6d4)'}} />
+              AI EMPIRE CEO
             </h1>
-            <p style={{color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>Fully Autonomous Product Generation System</p>
+            <p style={{color: 'var(--color-text-tertiary)', marginTop: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px', fontSize: 'var(--font-size-xs)'}}>
+              AUTONOMOUS QUANTUM SYSTEM
+            </p>
           </div>
           <div className="header-right">
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              background: 'rgba(16, 185, 129, 0.1)',
-              color: '#10b981',
-              padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-full)',
-              border: '1px solid rgba(16, 185, 129, 0.3)'
-            }}>
-              <div style={{width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', animation: 'pulse 2s infinite'}}></div>
-              <span style={{fontWeight: '600', fontSize: 'var(--font-size-sm)'}}>System Autonomous</span>
+            <div className="system-status">
+              <div className="status-pulse"></div>
+              <span style={{fontWeight: '700', fontSize: 'var(--font-size-sm)', color: '#06b6d4', textTransform: 'uppercase', letterSpacing: '1px'}}>
+                SYSTEM ONLINE
+              </span>
             </div>
           </div>
         </div>

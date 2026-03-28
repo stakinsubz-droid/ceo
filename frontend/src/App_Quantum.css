@@ -1,0 +1,699 @@
+/* ============================================================================
+   CEO SYSTEM - QUANTUM HOLOGRAPHIC DARK THEME
+   Futuristic • Cyber • Holographic • High-Tech
+   ============================================================================ */
+
+:root {
+  /* Quantum Dark Palette */
+  --color-void: #000000;
+  --color-deep-space: #0a0e27;
+  --color-dark-matter: #0f172a;
+  --color-quantum-blue: #0ea5e9;
+  --color-cyber-purple: #a855f7;
+  --color-neon-pink: #ec4899;
+  --color-plasma-green: #10b981;
+  --color-electric-cyan: #06b6d4;
+  --color-photon-yellow: #fbbf24;
+  
+  /* Holographic Gradients */
+  --gradient-holographic: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 25%, 
+    #f093fb 50%, 
+    #4facfe 75%, 
+    #00f2fe 100%);
+  
+  --gradient-quantum: linear-gradient(135deg,
+    #fa709a 0%,
+    #fee140 25%,
+    #30cfd0 50%,
+    #a8edea 75%,
+    #667eea 100%);
+  
+  --gradient-cyber: linear-gradient(135deg,
+    #0ea5e9 0%,
+    #a855f7 50%,
+    #ec4899 100%);
+  
+  --gradient-plasma: linear-gradient(135deg,
+    #10b981 0%,
+    #06b6d4 50%,
+    #a855f7 100%);
+  
+  /* Background */
+  --color-bg: #0a0e27;
+  --color-bg-elevated: rgba(15, 23, 42, 0.9);
+  --color-bg-glass: rgba(15, 23, 42, 0.6);
+  
+  /* Text Colors */
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #64748b;
+  --color-text-holographic: transparent;
+  
+  /* Neon Glows */
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.4);
+  --glow-purple: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(168, 85, 247, 0.4);
+  --glow-pink: 0 0 20px rgba(236, 72, 153, 0.6), 0 0 40px rgba(236, 72, 153, 0.4);
+  --glow-green: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.4);
+  --glow-holographic: 0 0 30px rgba(102, 126, 234, 0.6), 0 0 60px rgba(244, 93, 251, 0.4);
+  
+  /* Borders */
+  --border-cyber: 1px solid rgba(6, 182, 212, 0.3);
+  --border-holographic: 1px solid rgba(167, 139, 250, 0.4);
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Typography */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* Transitions */
+  --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   Global Styles
+   ============================================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background: var(--color-deep-space);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   Quantum Grid Background
+   ============================================================================ */
+
+.app-container {
+  position: relative;
+  display: flex;
+  height: 100vh;
+  background: var(--color-deep-space);
+  overflow: hidden;
+}
+
+/* Animated quantum grid */
+.app-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridScroll 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes gridScroll {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* Holographic orbs */
+.app-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.1) 0%, transparent 60%);
+  animation: orbFloat 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  33% { transform: translate(20px, -20px) scale(1.1); opacity: 0.8; }
+  66% { transform: translate(-20px, 20px) scale(0.9); opacity: 0.7; }
+}
+
+/* ============================================================================
+   Non-Blocking Loading Screen
+   ============================================================================ */
+
+.quantum-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 14, 39, 0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 300ms ease;
+}
+
+.quantum-loader {
+  text-align: center;
+}
+
+.quantum-spinner {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  position: relative;
+}
+
+.quantum-spinner::before,
+.quantum-spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  animation: quantumPulse 2s ease-in-out infinite;
+}
+
+.quantum-spinner::before {
+  width: 120px;
+  height: 120px;
+  border: 3px solid transparent;
+  border-top-color: #06b6d4;
+  border-right-color: #a855f7;
+  animation: quantumSpin 1.5s linear infinite;
+  box-shadow: var(--glow-cyan);
+}
+
+.quantum-spinner::after {
+  width: 80px;
+  height: 80px;
+  border: 3px solid transparent;
+  border-bottom-color: #ec4899;
+  border-left-color: #10b981;
+  top: 20px;
+  left: 20px;
+  animation: quantumSpin 2s linear infinite reverse;
+  box-shadow: var(--glow-pink);
+}
+
+@keyframes quantumSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes quantumPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.quantum-loader h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  background: var(--gradient-holographic);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographicShift 3s ease infinite;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.quantum-loader p {
+  color: var(--color-electric-cyan);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes holographicShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ============================================================================
+   Header - Cyber Tech Style
+   ============================================================================ */
+
+.header {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: var(--border-cyber);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 100;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gradient-cyber);
+  opacity: 0.5;
+}
+
+.header-left h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: 900;
+  background: var(--gradient-holographic);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographicShift 4s ease infinite;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  filter: drop-shadow(var(--glow-holographic));
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.system-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--glow-cyan);
+}
+
+.status-pulse {
+  width: 10px;
+  height: 10px;
+  background: #06b6d4;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #06b6d4, 0 0 20px #06b6d4;
+  animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* ============================================================================
+   Content Area
+   ============================================================================ */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-2xl);
+  position: relative;
+}
+
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: var(--gradient-cyber);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-cyan);
+}
+
+/* ============================================================================
+   Holographic Stat Cards
+   ============================================================================ */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.stat-card {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(30px) saturate(180%);
+  border: var(--border-holographic);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+/* Holographic shine effect */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  transition: all 0.6s;
+  opacity: 0;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+  animation: holographicSweep 1.5s infinite;
+}
+
+@keyframes holographicSweep {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* Border glow animation */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 2px;
+  background: var(--gradient-holographic);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.stat-card:hover::after {
+  opacity: 1;
+  animation: borderGlow 2s infinite;
+}
+
+@keyframes borderGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.stat-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    var(--glow-holographic);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: var(--font-size-2xl);
+}
+
+.stat-card-primary .stat-icon {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #a855f7;
+  box-shadow: var(--glow-purple);
+}
+
+.stat-card-success .stat-icon {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  box-shadow: var(--glow-green);
+}
+
+.stat-card-warning .stat-icon {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2));
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+.stat-card-info .stat-icon {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(14, 165, 233, 0.2));
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: #06b6d4;
+  box-shadow: var(--glow-cyan);
+}
+
+.stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+}
+
+.stat-value .value {
+  font-size: var(--font-size-4xl);
+  font-weight: 900;
+  background: var(--gradient-holographic);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographicShift 4s ease infinite;
+  letter-spacing: -1px;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.trend-up {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================================================
+   Cyber Buttons
+   ============================================================================ */
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all var(--transition-fast);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-primary {
+  background: var(--gradient-cyber);
+  background-size: 200% 200%;
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  box-shadow: var(--glow-cyan);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left var(--transition-slow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    var(--glow-cyan),
+    0 10px 30px rgba(6, 182, 212, 0.4);
+  animation: cyberPulse 1s infinite;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+@keyframes cyberPulse {
+  0%, 100% { box-shadow: var(--glow-cyan); }
+  50% { box-shadow: var(--glow-cyan), 0 0 40px rgba(6, 182, 212, 0.6); }
+}
+
+.btn-secondary {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(10px);
+  color: var(--color-electric-cyan);
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.btn-secondary:hover {
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+/* ============================================================================
+   Action Bar
+   ============================================================================ */
+
+.action-bar {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+  animation: fadeInUp 500ms ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   Glass Panel
+   ============================================================================ */
+
+.glass {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(30px) saturate(180%);
+  border: var(--border-holographic);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* ============================================================================
+   Fade In Animation
+   ============================================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================================================
+   Pulse Animation
+   ============================================================================ */
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ============================================================================
+   Responsive
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-bar {
+    flex-direction: column;
+  }
+  
+  .content {
+    padding: var(--spacing-lg);
+  }
+}
